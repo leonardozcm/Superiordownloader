@@ -1,15 +1,44 @@
 package com.example.com.superiordownloader;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.com.superiordownloader.Information.FileInfo;
+import com.example.com.superiordownloader.Service.DownloadService;
+import com.example.com.superiordownloader.Util.UrlNameGeter;
+import com.example.com.superiordownloader.adapter.ViewPagerAdapter;
+
+import org.litepal.crud.DataSupport;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
+    private TabLayout layoutTab;
+    private ViewPager viewPagerTab;
+    private List<Fragment> fragmentList;
+    private String[] Tablist = new String[]{"正在下载", "已完成"};
+    private ViewPagerAdapter viewPagerAdapter;
+    private DoingFragment doingFragment;
+    private DoneFragment doneFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -26,6 +56,12 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        /*
+        载入view视图
+         */
+        initView();
+        initData();
     }
 
     @Override
@@ -42,11 +78,100 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.add:
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                LayoutInflater layoutInflater = LayoutInflater.from(this);
+                final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
+                final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+                builder.setView(dialogview);
+                builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String url=editText.getText().toString();
+                        Intent intent=new Intent(MainActivity.this, DownloadService.class);
+                        intent.setAction(DownloadService.ACTION_START);
+
+                        int max=0;
+                        max= DataSupport.max(FileInfo.class,"id",int.class);
+                        FileInfo fileInfo=new FileInfo(max+1,url, UrlNameGeter.get(url),0,0);
+                        DbOperator.insertFile(fileInfo);
+
+                        intent.putExtra("fileInfo",fileInfo);
+                        startService(intent);
+
+                        doingFragment.fileAdapter.notifyItemInserted(0);
+                    }
+                });
+                builder.setNegativeButton("取消", null);
+                builder.show();
         }
 
-        return super.onOptionsItemSelected(item);
+        return true;
+    }
+
+    private void initView() {
+        layoutTab = (TabLayout) findViewById(R.id.layoutTab);
+        viewPagerTab = (ViewPager) findViewById(R.id.viewpagerTab);
+        fragmentList = new ArrayList<>();
+
+        doingFragment = new DoingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("param1", String.valueOf(0));
+        doingFragment.setArguments(bundle);
+        fragmentList.add(doingFragment);
+
+        doneFragment = new DoneFragment();
+        Bundle bundle2 = new Bundle();
+        bundle2.putString("param1", String.valueOf(1));
+        doneFragment.setArguments(bundle2);
+        fragmentList.add(doneFragment);
+    }
+
+    private void initData() {
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), Tablist, fragmentList);
+        viewPagerTab.setAdapter(viewPagerAdapter);
+        viewPagerTab.setOffscreenPageLimit(3);
+        viewPagerTab.addOnPageChangeListener(this);
+        layoutTab.setupWithViewPager(viewPagerTab);
+        layoutTab.setTabsFromPagerAdapter(viewPagerAdapter);
+    }
+
+    /*
+    viewPage三兄弟
+     */
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    //广播接收器
+    class UIRecive extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
+                int finished = intent.getIntExtra("finished", 0);
+                double speed = intent.getDoubleExtra("speed", 0);
+                int id = intent.getIntExtra("id", 0);
+                doingFragment.fileAdapter.updataProgress(id, finished, speed);
+            } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
+                // 下载结束的时候
+                FileInfo fileInfo = (FileInfo) intent.getSerializableExtra("fileInfo");
+                doingFragment.fileAdapter.updataProgress(fileInfo.getId(), 0, 0);
+                Toast.makeText(MainActivity.this, "下载完毕", Toast.LENGTH_SHORT).show();
+            } else if (DownloadService.ACTION_START.equals(intent.getAction())) {
+                Toast.makeText(MainActivity.this, "下载开始", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

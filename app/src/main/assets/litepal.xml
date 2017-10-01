@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+    <dbname value="Download"></dbname>
+
+    <version value="3"></version>
+
+    <list>
+        <mapping class="com.example.com.superiordownloader.Information.ThreadInfo"></mapping>
+        <mapping class="com.example.com.superiordownloader.Information.FileInfo"></mapping>
+    </list>
+</litepal>

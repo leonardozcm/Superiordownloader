@@ -3,8 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.com.superiordownloader.MainActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/add"
+        android:icon="@drawable/ic_add"
+        android:title="add"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/settings"
+        android:title="设置"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/delete"
+        android:title="清空数据库"
+        app:showAsAction="never"/>
+
 </menu>
