@@ -21,14 +21,16 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by 59771 on 2017/10/1.
  */
 
 public class DownloadTask {
+    private int mFinished =0;
     private Context mContext=null;
     private FileInfo mFileInfo=null;
-    private int mFinished =0;
     private int mThreadCount =1;
     private int lastFinshed=0;//用于计算下载速度，上一次更新UI的完成度
     private long costTime=1000;//默认循环一次时间为一秒
@@ -62,13 +64,14 @@ public class DownloadTask {
                     end = length - 1;
                 }
                 ThreadInfo threadInfo = new ThreadInfo(i, mFileInfo.getUrl(), start, end, 0);
+                Log.d(TAG, "At Start:"+threadInfo.getStart()+",AND At End:"+threadInfo.getEnd());
                 list.add(threadInfo);
             }
         }
         mThreadlist=new ArrayList<>();
         for (ThreadInfo info:list) {
             DownloadThread thread =new DownloadThread(info);
-            thread.start();
+            Log.d(TAG, "At LOOP threadInfo.getId()"+Integer.toString(info.getId()));
 
             //启动线程池管理线程
             DownloadTask.mExecutorService.execute(thread);
@@ -119,44 +122,56 @@ public synchronized void checkAllFinished(){
                 conn.setRequestMethod("GET");
 
                 int start=threadInfo.getStart()+threadInfo.getFinished();//从上次结束的地方开始
+                Log.d(TAG, "Really Starts at"+start);
                 conn.setRequestProperty("Range","byte="+start+"-"+threadInfo.getEnd());
                 File file=new File(DownloadService.DownloadPath, mFileInfo.getFileName());
                 raf=new RandomAccessFile(file,"rwd");
                 raf.seek(start);
+
                 mFinished+=threadInfo.getFinished();
 
                 lastFinshed=mFinished;
 
-                Intent intent=new Intent();
-                intent.setAction(DownloadService.ACTION_UPDATE);
+
 
                 int code=conn.getResponseCode();
-                if(code==HttpURLConnection.HTTP_PARTIAL){
+                Log.d(TAG,Integer.toString(code));
+                if(code==200){
+                    Log.d(TAG, "run: Join in the loop");
                     is=conn.getInputStream();
                     byte[] bt=new byte[1024];
                     int len=-1;
                     //定义UI刷新时间
                     long time=System.currentTimeMillis();
+
                     while ((len=is.read(bt))!=-1){
+                        Log.d(TAG, "run: Downloading");
                         raf.write(bt,0,len);
                         //累积进度
                         mFinished+=len;
                         threadInfo.setFinished(threadInfo.getFinished()+len);
                         //不频繁地更新UI
                         if(System.currentTimeMillis()-time>1000){
+                            Log.d(TAG, "run: Updateing");
+                            Intent intent=new Intent();
+                            intent.setAction(DownloadService.ACTION_UPDATE);
                             costTime=System.currentTimeMillis()-time;
                             time=System.currentTimeMillis();
-                            intent.putExtra("finished",mFinished*100/mFileInfo.getLength());//完成度
-                            intent.putExtra("speed",(double)((mFinished-lastFinshed)/(1024*costTime)));
-                            intent.putExtra("id",mFileInfo.getId());
+                            intent.putExtra("finished",((long)mFinished)*100/(3*mFileInfo.getLength()));//完成度
+                            intent.putExtra("speed",(double)((mFinished-lastFinshed)/(costTime)));
+                            intent.putExtra("length",mFileInfo.getLength());
+                            intent.putExtra("fileinfo_id",mFileInfo.getId());
+
 
                             lastFinshed=mFinished;
 
                             Log.i("test", mFinished * 100 / mFileInfo.getLength() + "");
 
                             mContext.sendBroadcast(intent);
+                            Log.d(TAG, "run: Update Intent send");
                         }
                         if (mIsDelete){
+                            Log.d(TAG, "run: Delete");
                             DbOperator.deleteThread(threadInfo.getUrl());
                             if(file.isFile()){
                                 file.delete();
@@ -175,9 +190,9 @@ public synchronized void checkAllFinished(){
                             }
                         }
                         if(mIsPause){
+                            Log.d(TAG, "run: Pause");
                             DbOperator.updateThread(threadInfo.getUrl(), threadInfo.getId(), threadInfo.getFinished());
                             return;
-
                         }
                     }
                 }

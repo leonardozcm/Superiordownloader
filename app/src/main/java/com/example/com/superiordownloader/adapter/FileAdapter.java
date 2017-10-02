@@ -2,6 +2,7 @@ package com.example.com.superiordownloader.adapter;
 
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,11 +19,19 @@ import com.example.com.superiordownloader.Service.DownloadService;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by 59771 on 2017/10/1.
  */
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
+
+    //test
+   static int n=0;
+
+
+
     private List<FileInfo> fileInfoList=new ArrayList<>();
     private ViewHolder mViewHolder;
     static class ViewHolder extends RecyclerView.ViewHolder{
@@ -49,7 +58,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
         final View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.download_item,parent,false);
         final ViewHolder viewHolder=new ViewHolder(view);
         viewHolder.download_status.setOnClickListener(new View.OnClickListener() {
@@ -60,6 +69,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 FileInfo fileInfo=fileInfoList.get(position);
                 Intent intent=new Intent(v.getContext(), DownloadService.class);
                 List<ThreadInfo> threadInfoList= DbOperator.queryThreads(fileInfo.getUrl());
+                Log.d(TAG, "onClick:0");
                 if(!threadInfoList.get(0).isStop()){
                     intent.setAction(DownloadService.ACTION_STOP);
                     intent.putExtra("fileInfo",fileInfo);
@@ -91,6 +101,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                     intent.setAction(DownloadService.ACTION_DELETE);
                     intent.putExtra("fileInfo",fileInfo);
                     v.getContext().startService(intent);
+                fileInfoList.remove(position);
                   notifyItemRemoved(position);
             }
         });
@@ -104,6 +115,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
        FileInfo fileInfo=fileInfoList.get(position);
         holder.download_name.setText(fileInfo.getFileName());
         holder.download_speed.setText(fileInfo.getSpeed()+"kb/s");
+        holder.download_progressbar.setProgress(fileInfo.getFinished());
         holder.download_progress.setText((double)(fileInfo.getFinished()/(1024*1024))+"/"+(double)(fileInfo.getLength()/(1024*1024))+"MB");
     }
 
@@ -115,16 +127,23 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     /*
     更新UI
      */
-    public void updataProgress(int id,int progress,double speed){
-        for (FileInfo fileinfo:fileInfoList
-             ) {
-            if(fileinfo.getId()==id){
-                fileinfo.setSpeed(speed);
+    public void updataProgress(int file_id,int progress,double speed,int length){
+        Log.d(TAG, "updataProgress: start to update UI");
+        Log.d(TAG, Integer.toString(fileInfoList.size()));
+        Log.d(TAG, "onReceive: file_id="+file_id+",speed="+speed+",finished="+progress+".");
+        for (FileInfo fileinfo:fileInfoList) {
+            if(fileinfo.getId()==file_id){
+                Log.d(TAG, "updataProgress: found");
                 fileinfo.setFinished(progress);
+                fileinfo.setLength(length);
+                fileinfo.setSpeed(speed);
+                notifyDataSetChanged();
                 break;
             }
+            Log.d(TAG, "Search for next");
         }
+
        // FileInfo info=fileInfoList.get(id);
-        notifyDataSetChanged();
+
     }
 }

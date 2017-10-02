@@ -81,7 +81,6 @@ public class FileInfo extends DataSupport implements Serializable {
         this.speed = speed;
     }
 
-
     @Override
     public String toString() {
         return "FileInfo [id=" + id + ", url=" + url + ", fileName=" + fileName + ", length=" + length + ", finished="

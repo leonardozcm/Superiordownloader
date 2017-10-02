@@ -51,11 +51,15 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
+        Log.d(TAG, "onStartCommand: Someone calls");
       if(ACTION_START.equals(intent.getAction())){
           FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
+          Log.d(TAG, "onStartCommand: add Intent received");
           Log.i(TAG, "START" + fileInfo.toString());
          InitThread initThread=new InitThread(fileInfo);
+          Log.d(TAG, "onStartCommand: InitTread Build success");
           DownloadTask.mExecutorService.execute(initThread);
+          Log.d(TAG, "onStartCommand: mExecutorService start success");
       }else if(ACTION_STOP.equals(intent.getAction())) {
           FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
           DownloadTask task=mTasks.get(fileInfo.getId());
@@ -80,6 +84,7 @@ public class DownloadService extends Service {
     public void handleMessage(Message msg){
         switch (msg.what){
             case MSG_INIT:
+                Log.d(TAG, "handleMessage: recevied from InitTread");
                 FileInfo fileInfo=(FileInfo)msg.obj;
                 Log.i(TAG, "INIT:"+fileInfo.toString());
                 //开始下载任务
@@ -88,9 +93,9 @@ public class DownloadService extends Service {
 
                 mTasks.put(fileInfo.getId(),task);
                 //发送通知
-                Intent intent=new Intent(ACTION_START);
+              /*  Intent intent=new Intent(ACTION_START);
                 intent.putExtra("fileInfo",fileInfo);
-                sendBroadcast(intent);
+                sendBroadcast(intent);*/
                 break;
             default:break;
         }
@@ -121,25 +126,31 @@ public class DownloadService extends Service {
                 }
                 //获取length<=0,获取失败
                 if(length<=0){
+                    Log.d(TAG, "run: length get fail");
                     return;
                 }
+                Log.d(TAG, "run: length get success");
                 //判断path有效性，没有就创建
                 File dir=new File(DownloadPath);
                 if(!dir.exists()){
+                    Log.d(TAG, "run: dir not exist");
                     dir.mkdir();
                 }
                 //创建文件
                 File file=new File(dir,mFileInfo.getFileName());
-                raf=new RandomAccessFile(file,"rwd");
+                raf=new RandomAccessFile(file,"rw");
                 raf.setLength(length);
+                Log.d(TAG, "run: file build success");
                 //设置文件长度
                 mFileInfo.setLength(length);
+                mFileInfo.updateAll("url = ?",mFileInfo.getUrl());
                 //handler发送Fileinfo对象
                 Message msg=Message.obtain();
                 msg.obj=mFileInfo;
                 msg.what=MSG_INIT;
                 mHandler.sendMessage(msg);
                 msg.setTarget(mHandler);
+                Log.d(TAG, "run: msg send");
             }catch (Exception e){
                 e.printStackTrace();
             }finally {
@@ -157,5 +168,6 @@ public class DownloadService extends Service {
             super.run();
             }
         }
+
     }
 

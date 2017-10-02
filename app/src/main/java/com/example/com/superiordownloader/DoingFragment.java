@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,7 @@ public class DoingFragment extends Fragment {
 
     private View view;
     public FileAdapter fileAdapter;
-    private List<FileInfo> mFileInfoList;
+    public List<FileInfo> mFileInfoList;
 
     public DoingFragment() {
         // Required empty public constructor
@@ -62,7 +61,6 @@ public class DoingFragment extends Fragment {
         view=inflater.inflate(R.layout.fragment_doing,container,false);
         initFiles();//初始化下载线程
         RecyclerView recyclerView=(RecyclerView)view.findViewById(R.id.doing_list);
-        Log.d("ReyclerView",Boolean.toString(recyclerView==null));
         LinearLayoutManager layoutManager=new LinearLayoutManager(view.getContext());
         recyclerView.setLayoutManager(layoutManager);
         fileAdapter=new FileAdapter(mFileInfoList);
