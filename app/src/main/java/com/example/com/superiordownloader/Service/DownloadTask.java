@@ -28,11 +28,12 @@ import static android.content.ContentValues.TAG;
  */
 
 public class DownloadTask {
-    private int mFinished =0;
+    private List<ThreadInfo> list;
+    private long mFinished =0;
     private Context mContext=null;
     private FileInfo mFileInfo=null;
     private int mThreadCount =1;
-    private int lastFinshed=0;//用于计算下载速度，上一次更新UI的完成度
+    private long lastFinshed=0;//用于计算下载速度，上一次更新UI的完成度
     private long costTime=1000;//默认循环一次时间为一秒
     public boolean mIsPause = false;
     public boolean mIsDelete = false;
@@ -47,7 +48,7 @@ public class DownloadTask {
     }
 
     public void download(){
-        List<ThreadInfo> list = DataSupport.where("url = ?",mFileInfo.getUrl()).find(ThreadInfo.class);
+        list = DataSupport.where("url = ?",mFileInfo.getUrl()).find(ThreadInfo.class);
         /*
        如果是 第一次下载
          */
@@ -122,21 +123,21 @@ public synchronized void checkAllFinished(){
                 conn.setRequestMethod("GET");
 
                 int start=threadInfo.getStart()+threadInfo.getFinished();//从上次结束的地方开始
-                Log.d(TAG, "Really Starts at"+start);
-                conn.setRequestProperty("Range","byte="+start+"-"+threadInfo.getEnd());
+                conn.setRequestProperty("Range","bytes="+start+"-"+threadInfo.getEnd());
+                Log.d(TAG, "run: start at"+start+",end at"+threadInfo.getEnd());
                 File file=new File(DownloadService.DownloadPath, mFileInfo.getFileName());
                 raf=new RandomAccessFile(file,"rwd");
                 raf.seek(start);
 
                 mFinished+=threadInfo.getFinished();
-
+                Log.d(TAG, "run: get Start Length: "+mFinished);
                 lastFinshed=mFinished;
 
 
 
                 int code=conn.getResponseCode();
                 Log.d(TAG,Integer.toString(code));
-                if(code==200){
+                if(code==206){
                     Log.d(TAG, "run: Join in the loop");
                     is=conn.getInputStream();
                     byte[] bt=new byte[1024];
@@ -145,19 +146,24 @@ public synchronized void checkAllFinished(){
                     long time=System.currentTimeMillis();
 
                     while ((len=is.read(bt))!=-1){
-                        Log.d(TAG, "run: Downloading");
                         raf.write(bt,0,len);
                         //累积进度
-                        mFinished+=len;
+                       /* mFinished+=len;*/
                         threadInfo.setFinished(threadInfo.getFinished()+len);
+
+                        mFinished =0;
+                        for (ThreadInfo info:list
+                             ) {
+                            mFinished+=info.getFinished();
+                        }
                         //不频繁地更新UI
                         if(System.currentTimeMillis()-time>1000){
-                            Log.d(TAG, "run: Updateing");
                             Intent intent=new Intent();
                             intent.setAction(DownloadService.ACTION_UPDATE);
                             costTime=System.currentTimeMillis()-time;
                             time=System.currentTimeMillis();
-                            intent.putExtra("finished",((long)mFinished)*100/(3*mFileInfo.getLength()));//完成度
+                            Log.d(TAG, "run: finish:"+mFinished);
+                            intent.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
                             intent.putExtra("speed",(double)((mFinished-lastFinshed)/(costTime)));
                             intent.putExtra("length",mFileInfo.getLength());
                             intent.putExtra("fileinfo_id",mFileInfo.getId());
@@ -165,10 +171,8 @@ public synchronized void checkAllFinished(){
 
                             lastFinshed=mFinished;
 
-                            Log.i("test", mFinished * 100 / mFileInfo.getLength() + "");
 
                             mContext.sendBroadcast(intent);
-                            Log.d(TAG, "run: Update Intent send");
                         }
                         if (mIsDelete){
                             Log.d(TAG, "run: Delete");

@@ -51,7 +51,6 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
-        Log.d(TAG, "onStartCommand: Someone calls");
       if(ACTION_START.equals(intent.getAction())){
           FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
           Log.d(TAG, "onStartCommand: add Intent received");
