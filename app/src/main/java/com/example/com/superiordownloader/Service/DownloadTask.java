@@ -34,7 +34,10 @@ public class DownloadTask {
     private FileInfo mFileInfo=null;
     private int mThreadCount =1;
     private long lastFinshed=0;//用于计算下载速度，上一次更新UI的完成度
+    private long lastloopTime;
     private long costTime=1000;//默认循环一次时间为一秒
+    private int looptimes=0;//用于记录执行1s循环的次数，等于3就更新速度
+    private Double speed=0.0;//下载速度
     public boolean mIsPause = false;
     public boolean mIsDelete = false;
     private List<DownloadThread> mThreadlist = null;
@@ -133,8 +136,6 @@ public synchronized void checkAllFinished(){
                 Log.d(TAG, "run: get Start Length: "+mFinished);
                 lastFinshed=mFinished;
 
-
-
                 int code=conn.getResponseCode();
                 Log.d(TAG,Integer.toString(code));
                 if(code==206){
@@ -143,7 +144,7 @@ public synchronized void checkAllFinished(){
                     byte[] bt=new byte[1024];
                     int len=-1;
                     //定义UI刷新时间
-                    long time=System.currentTimeMillis();
+                    lastloopTime=System.currentTimeMillis();
 
                     while ((len=is.read(bt))!=-1){
                         raf.write(bt,0,len);
@@ -157,22 +158,29 @@ public synchronized void checkAllFinished(){
                             mFinished+=info.getFinished();
                         }
                         //不频繁地更新UI
-                        if(System.currentTimeMillis()-time>1000){
+                        if(System.currentTimeMillis()-lastloopTime>1000){
+                            looptimes++;
+
                             Intent intent=new Intent();
                             intent.setAction(DownloadService.ACTION_UPDATE);
-                            costTime=System.currentTimeMillis()-time;
-                            time=System.currentTimeMillis();
-                            Log.d(TAG, "run: finish:"+mFinished);
+
+
+
                             intent.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
-                            intent.putExtra("speed",(double)((mFinished-lastFinshed)/(costTime)));
                             intent.putExtra("length",mFileInfo.getLength());
                             intent.putExtra("fileinfo_id",mFileInfo.getId());
-
-
-                            lastFinshed=mFinished;
+                            if(looptimes>=3){
+                                costTime=System.currentTimeMillis()-lastloopTime;
+                                speed=(double)((mFinished-lastFinshed)/costTime);
+                                lastloopTime=System.currentTimeMillis();
+                                lastFinshed=mFinished;
+                                looptimes=0;
+                            }
+                            intent.putExtra("speed",speed);
 
 
                             mContext.sendBroadcast(intent);
+
                         }
                         if (mIsDelete){
                             Log.d(TAG, "run: Delete");

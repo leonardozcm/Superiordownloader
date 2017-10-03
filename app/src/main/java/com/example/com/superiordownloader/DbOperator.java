@@ -7,6 +7,8 @@ import org.litepal.crud.DataSupport;
 
 import java.util.List;
 
+import static org.litepal.crud.DataSupport.findAll;
+
 /**
  * Created by 59771 on 2017/10/1.
  */
@@ -26,6 +28,13 @@ static public void insertFile(FileInfo fileInfo){
         DataSupport.deleteAll(FileInfo.class,"url = ?",url);
     }
 //更新线程
+    static public void updateFileInfo(String url){
+        FileInfo fileInfo=new FileInfo();
+        List<FileInfo> infolist=DataSupport.where("url = ?",url).find(FileInfo.class);
+        fileInfo.setIsStop(infolist.get(0).getIsStop()+1);
+        fileInfo.updateAll("url = ?",url);
+    }
+
 static public void  updateThread(String url, int id, int finished) {
     ThreadInfo threadInfo=new ThreadInfo();
     threadInfo.setFinished(finished);
@@ -41,7 +50,7 @@ static public void  updateThread(String url, int id, int finished) {
     }
 //查询线程
     static public List<ThreadInfo> FindALL(){
-        List<ThreadInfo> list=DataSupport.findAll(ThreadInfo.class);
+        List<ThreadInfo> list= findAll(ThreadInfo.class);
         return  list;
     }
     static public List<ThreadInfo> queryThreads(String url) {
@@ -50,7 +59,7 @@ static public void  updateThread(String url, int id, int finished) {
 }
 //检查线程池是否为空
     static public boolean isAnyExists(){
-    List<ThreadInfo> list =DataSupport.findAll(ThreadInfo.class);
+    List<ThreadInfo> list = findAll(ThreadInfo.class);
     return !list.isEmpty();
 }
 //查询是否存在某一线程

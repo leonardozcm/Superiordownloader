@@ -15,6 +15,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:hint="请输入URL"
-    android:text="http://study.163.com/pub/study-android-official.apk"
+    android:text="http://s1.music.126.net/download/android/CloudMusic_3.4.1.133604_official.apk"
     android:id="@+id/get_url"/>
 </LinearLayout>

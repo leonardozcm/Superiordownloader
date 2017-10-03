@@ -50,30 +50,38 @@ public class DownloadService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy: Servce");
+        super.onDestroy();
+    }
+
+    @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
-      if(ACTION_START.equals(intent.getAction())){
-          FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
-          Log.d(TAG, "onStartCommand: add Intent received");
-          Log.i(TAG, "START" + fileInfo.toString());
-         InitThread initThread=new InitThread(fileInfo);
-          Log.d(TAG, "onStartCommand: InitTread Build success");
-          DownloadTask.mExecutorService.execute(initThread);
-          Log.d(TAG, "onStartCommand: mExecutorService start success");
-      }else if(ACTION_STOP.equals(intent.getAction())) {
-          FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
-          DownloadTask task=mTasks.get(fileInfo.getId());
-          if (task!=null) {
-              //停止下载任务
-              task.mIsPause = true;
-          }
-      }else if(ACTION_DELETE.equals(intent.getAction())){
-          FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
-          DownloadTask task=mTasks.get(fileInfo.getId());
-          if (task!=null) {
-              //停止下载任务
-              task.mIsDelete= true;
-          }
-      }
+        if(intent!=null){
+            if(ACTION_START.equals(intent.getAction())){
+                FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
+                Log.d(TAG, "onStartCommand: add Intent received");
+                Log.i(TAG, "START" + fileInfo.toString());
+                InitThread initThread=new InitThread(fileInfo);
+                Log.d(TAG, "onStartCommand: InitTread Build success");
+                DownloadTask.mExecutorService.execute(initThread);
+                Log.d(TAG, "onStartCommand: mExecutorService start success");
+            }else if(ACTION_STOP.equals(intent.getAction())) {
+                FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
+                DownloadTask task=mTasks.get(fileInfo.getId());
+                if (task!=null) {
+                    //停止下载任务
+                    task.mIsPause = true;
+                }
+            }else if(ACTION_DELETE.equals(intent.getAction())){
+                FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
+                DownloadTask task=mTasks.get(fileInfo.getId());
+                if (task!=null) {
+                    //停止下载任务
+                    task.mIsDelete= true;
+                }
+            }
+        }
       return  super.onStartCommand(intent, flags, startId);
     }
 
@@ -167,6 +175,7 @@ public class DownloadService extends Service {
             super.run();
             }
         }
+
 
     }
 

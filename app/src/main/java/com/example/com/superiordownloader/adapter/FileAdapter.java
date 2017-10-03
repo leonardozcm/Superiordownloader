@@ -12,9 +12,11 @@ import android.widget.TextView;
 
 import com.example.com.superiordownloader.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
-import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
+import com.example.com.superiordownloader.Util.DataTransFormer;
+
+import org.litepal.crud.DataSupport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,14 +28,9 @@ import static android.content.ContentValues.TAG;
  */
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
-
-    //test
-   static int n=0;
-
-
+    private int n=0;
 
     private List<FileInfo> fileInfoList=new ArrayList<>();
-    private ViewHolder mViewHolder;
     static class ViewHolder extends RecyclerView.ViewHolder{
         ImageButton download_status;
         TextView download_name;
@@ -68,24 +65,33 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 int position=viewHolder.getAdapterPosition();
                 FileInfo fileInfo=fileInfoList.get(position);
                 Intent intent=new Intent(v.getContext(), DownloadService.class);
-                List<ThreadInfo> threadInfoList= DbOperator.queryThreads(fileInfo.getUrl());
-                Log.d(TAG, "onClick:0");
-                if(!threadInfoList.get(0).isStop()){
+                intent.putExtra("fileInfo",fileInfo);
+               /* List<ThreadInfo> threadInfoList= DbOperator.queryThreads(fileInfo.getUrl());
+                for (ThreadInfo info:threadInfoList
+                     ) {
+                    if(info.isStop()){
+                        IsStop=true;break;
+                    }
+                }*/
+               List<FileInfo> fileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+                int IsStop=fileinfolist.get(0).getIsStop();
+                Log.d(TAG, "onClick: "+IsStop);
+
+                if((IsStop%2)==0){
                     intent.setAction(DownloadService.ACTION_STOP);
-                    intent.putExtra("fileInfo",fileInfo);
+
                     v.getContext().startService(intent);
-                    DbOperator.updateThread(fileInfo.getUrl(),true);
+                    DbOperator.updateFileInfo(fileInfo.getUrl());
                     viewHolder.download_status.setImageResource(R.drawable.ic_continue);
                     //TODO 是否可以删除？
-                    notifyItemChanged(position);
+                    notifyDataSetChanged();
                 }else{
                     intent.setAction(DownloadService.ACTION_START);
-                    intent.putExtra("fileInfo",fileInfo);
                     v.getContext().startService(intent);
-                    DbOperator.updateThread(fileInfo.getUrl(),false);
-                    viewHolder.download_status.setImageResource(R.drawable.ic_stop);
+                    DbOperator.updateFileInfo(fileInfo.getUrl());
+                    viewHolder.download_status.setImageResource(R.drawable.ic_pause);
                     //TODO 是否可以删除？
-                    notifyItemChanged(position);
+                    notifyDataSetChanged();
                 }
 
             }
@@ -110,13 +116,12 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        mViewHolder=holder;
+    public void onBindViewHolder(ViewHolder holder, int position) {;
        FileInfo fileInfo=fileInfoList.get(position);
         holder.download_name.setText(fileInfo.getFileName());
         holder.download_speed.setText(fileInfo.getSpeed()+"kb/s");
         holder.download_progressbar.setProgress(fileInfo.getFinished());
-        holder.download_progress.setText((double)(fileInfo.getFinished()/(1024*1024))+"/"+(double)(fileInfo.getLength()/(1024*1024))+"MB");
+        holder.download_progress.setText(DataTransFormer.ToString(((fileInfo.getFinished()/100.0)*fileInfo.getLength())/(1024.0*1024.0))+"MB/"+DataTransFormer.ToString(fileInfo.getLength()/(1024.0*1024.0))+"MB");
     }
 
     @Override
@@ -128,19 +133,16 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     更新UI
      */
     public void updataProgress(int file_id,int progress,double speed,int length){
-        Log.d(TAG, "updataProgress: start to update UI");
-        Log.d(TAG, Integer.toString(fileInfoList.size()));
-        Log.d(TAG, "onReceive: file_id="+file_id+",speed="+speed+",finished="+progress+".");
         for (FileInfo fileinfo:fileInfoList) {
             if(fileinfo.getId()==file_id){
-                Log.d(TAG, "updataProgress: found");
+
                 fileinfo.setFinished(progress);
                 fileinfo.setLength(length);
                 fileinfo.setSpeed(speed);
+
                 notifyDataSetChanged();
                 break;
             }
-            Log.d(TAG, "Search for next");
         }
 
        // FileInfo info=fileInfoList.get(id);

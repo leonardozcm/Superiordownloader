@@ -24,7 +24,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="com.example.com.superiordownloader.Service.DownloadService"></service>
+
+        <service android:name=".Service.DownloadService" />
+
     </application>
 
 </manifest>

@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private DoneFragment doneFragment;
     private String url;
     public UIRecive mRecive;
-
+   // private Binder mbinder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     @Override
     protected void onDestroy() {
         unregisterReceiver(mRecive);
+        //stopService(new Intent(this,DownloadService.class));
         super.onDestroy();
     }
 
@@ -206,22 +207,18 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     public class UIRecive extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("Mainactivity", "onReceive: RECEIVED INTENT"+intent.getAction());
-            Log.d("Mainactivity", "Is ACTION_UPDATE?"+Boolean.toString(DownloadService.ACTION_UPDATE.equals(intent.getAction())));
             if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
-                Log.d("Mainactivity", "onReceive: Update Intent from Task");
                 int finished = (int)intent.getLongExtra("finished", 0);
                 double speed = intent.getDoubleExtra("speed", 0.0);
                 int fileinfo_id = intent.getIntExtra("fileinfo_id", 0);
                 int length=intent.getIntExtra("length",0);
-                Log.d("Mainactivity", "onReceive: id="+fileinfo_id+",speed="+speed+",finished="+finished+".");
                 doingFragment.fileAdapter.updataProgress(fileinfo_id, finished, speed,length);
-                Log.d("Mainactivity", "Ask fileAdapter to update");
             } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
                 // 下载结束的时候
                 FileInfo fileInfo = (FileInfo) intent.getSerializableExtra("fileInfo");
-                int fileinfo_id = intent.getIntExtra("fileinfo_id", 0);
-                int length=intent.getIntExtra("length",0);
+                int fileinfo_id = fileInfo.getId();
+                Log.d("MainActivity", "onReceive: "+fileinfo_id);
+                int length= fileInfo.getLength();
                 doingFragment.fileAdapter.updataProgress(fileinfo_id, 100, 0,length);
                 Toast.makeText(MainActivity.this, "下载完毕", Toast.LENGTH_SHORT).show();
             } else if (DownloadService.ACTION_START.equals(intent.getAction())) {

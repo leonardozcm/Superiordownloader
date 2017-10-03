@@ -17,6 +17,16 @@ public class FileInfo extends DataSupport implements Serializable {
     private int length;
     private int finished;//文件完成度
 
+    public int getIsStop() {
+        return isStop;
+    }
+
+    public void setIsStop(int isStop) {
+        this.isStop = isStop;
+    }
+
+    private int isStop;
+
     private double speed=0.0;//下载速度
 
     public FileInfo() {
@@ -80,6 +90,7 @@ public class FileInfo extends DataSupport implements Serializable {
     public void setSpeed(double speed) {
         this.speed = speed;
     }
+
 
     @Override
     public String toString() {

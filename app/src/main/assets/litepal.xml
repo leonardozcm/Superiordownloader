@@ -2,7 +2,7 @@
 <litepal>
     <dbname value="Download"></dbname>
 
-    <version value="5"></version>
+    <version value="7"></version>
 
     <list>
         <mapping class="com.example.com.superiordownloader.Information.ThreadInfo"></mapping>
