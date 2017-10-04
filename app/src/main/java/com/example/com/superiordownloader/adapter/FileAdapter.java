@@ -32,7 +32,6 @@ import static android.content.ContentValues.TAG;
  */
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
-    private int n=0;
 
     private List<FileInfo> fileInfoList=new ArrayList<>();
     static class ViewHolder extends RecyclerView.ViewHolder{

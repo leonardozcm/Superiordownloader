@@ -1,6 +1,5 @@
 package com.example.com.superiordownloader.Service;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.Handler;
@@ -10,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.com.superiordownloader.Information.FileInfo;
+import com.example.com.superiordownloader.ServiceHolder.BaseService;
 import com.example.com.superiordownloader.UpdateReceiver;
 import com.example.com.superiordownloader.Util.NotificationUtil;
 
@@ -25,7 +25,7 @@ import java.util.Map;
  * Created by 59771 on 2017/10/1.
  */
 
-public class DownloadService extends Service {
+public class DownloadService extends BaseService {
     private static final String TAG="DownloadService";
 
     public static final String ACTION_START = "ACTION_START";
@@ -122,6 +122,9 @@ public class DownloadService extends Service {
                 Intent intent=new Intent(ACTION_START);
                 intent.putExtra("fileInfo",fileInfo);
                 sendBroadcast(intent);
+
+               // startForeground(fileInfo.getId(), NotificationUtil.mNotifications.get(fileInfo.getId()));
+                Log.d(TAG, "handleMessage: Pretending startForeground -------------");
                 break;
             default:break;
         }
@@ -194,7 +197,6 @@ public class DownloadService extends Service {
             super.run();
             }
         }
-
 
     }
 

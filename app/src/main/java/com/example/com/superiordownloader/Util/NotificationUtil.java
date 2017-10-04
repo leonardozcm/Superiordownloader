@@ -12,6 +12,7 @@ import android.widget.RemoteViews;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.MainActivity;
 import com.example.com.superiordownloader.R;
+import com.example.com.superiordownloader.ServiceHolder.ServiceCollecetor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class NotificationUtil {
 
     private Context mContext;
    private NotificationManager mNotificationManager = null;
-   static private Map<Integer, Notification> mNotifications = new HashMap<Integer, Notification>();
+   static public Map<Integer, Notification> mNotifications = new HashMap<Integer, Notification>();
 
     public NotificationUtil(Context context){
         Log.d("Notify", "NotificationUtil: Started");
@@ -65,6 +66,7 @@ if(mNotificationManager==null){
             Log.d(TAG, "show: id = "+fileInfo.getId());
 
             mNotifications.put(fileInfo.getId(), notification);
+            ServiceCollecetor.getService().startForeground(fileInfo.getId(), notification);
             Log.d(TAG, "show: Contains id ? "+(mNotifications.containsKey(fileInfo.getId())));
 
         }

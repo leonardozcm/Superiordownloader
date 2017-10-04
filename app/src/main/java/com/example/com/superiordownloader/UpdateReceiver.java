@@ -12,7 +12,6 @@ import static android.content.ContentValues.TAG;
 import static com.example.com.superiordownloader.Service.DownloadService.ACTION_DELETE_NOTIFY;
 import static com.example.com.superiordownloader.Service.DownloadService.ACTION_FINISHED_NOTIFY;
 import static com.example.com.superiordownloader.Service.DownloadService.ACTION_START_NOTIFY;
-import static com.example.com.superiordownloader.Service.DownloadService.ACTION_UPDATE;
 import static com.example.com.superiordownloader.Service.DownloadService.ACTION_UPDATE_NOTIFY;
 
 public class UpdateReceiver extends BroadcastReceiver {
@@ -23,10 +22,11 @@ NotificationUtil notificationUtil;
         notificationUtil=new NotificationUtil(context);
 
         if(ACTION_START_NOTIFY.equals(intent.getStringExtra("Action"))){
+            Log.d(TAG, "UpdateReceiver: receive "+ACTION_START_NOTIFY);
             FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
             notificationUtil.show(fileInfo);
         }else if(ACTION_UPDATE_NOTIFY.equals(intent.getStringExtra("Action"))){
-            Log.d(TAG, "UpdateReceiver: receive "+ACTION_UPDATE);
+            Log.d(TAG, "UpdateReceiver: receive "+ACTION_UPDATE_NOTIFY);
             int finished = (int)intent.getLongExtra("finished", 0);
             double speed = intent.getDoubleExtra("speed", 0.0);
             int fileinfo_id = intent.getIntExtra("fileinfo_id", 0);
