@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                                       DbOperator.insertFile(fileInfo);
 
                                       intent.putExtra("fileInfo", fileInfo);
+                                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                       startService(intent);
                                       Log.d("MainActivity", "onClick: add Intent send");
                                       doingFragment.mFileInfoList.add(fileInfo);

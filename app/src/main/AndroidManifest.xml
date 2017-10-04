@@ -28,7 +28,8 @@
         <service
             android:name=".Service.DownloadService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:process="system"/>
 
         <receiver
             android:name=".UpdateReceiver"

@@ -55,18 +55,20 @@ public class DownloadService extends Service {
 
     @Override
     public void onCreate() {
+        Log.d(TAG, "onCreate: Service!!!!!!");
         super.onCreate();
     }
+    
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy: Servce");
+        Log.d(TAG, "onDestroy: Service!!!!!!!!!");
         super.onDestroy();
     }
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
-        notificationUtil=new NotificationUtil(this);
+        Log.d(TAG, "onStartCommand: Service!!!!!!!!!");
         if(intent!=null){
             if(ACTION_START.equals(intent.getAction())){
                 FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
