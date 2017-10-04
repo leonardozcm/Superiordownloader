@@ -222,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 doingFragment.fileAdapter.updataProgress(fileinfo_id, 100, 0,length);
                 Toast.makeText(MainActivity.this, "下载完毕", Toast.LENGTH_SHORT).show();
             } else if (DownloadService.ACTION_START.equals(intent.getAction())) {
+
                 Toast.makeText(MainActivity.this, "下载开始", Toast.LENGTH_SHORT).show();
             }
         }

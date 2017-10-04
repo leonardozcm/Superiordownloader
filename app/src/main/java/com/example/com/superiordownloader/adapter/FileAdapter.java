@@ -9,15 +9,19 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.com.superiordownloader.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
+import com.example.com.superiordownloader.UpdateReceiver;
 import com.example.com.superiordownloader.Util.DataTransFormer;
+import com.example.com.superiordownloader.Util.FileCleaner;
 
 import org.litepal.crud.DataSupport;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,14 +86,12 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
                     v.getContext().startService(intent);
                     DbOperator.updateFileInfo(fileInfo.getUrl());
-                    viewHolder.download_status.setImageResource(R.drawable.ic_continue);
                     //TODO 是否可以删除？
                     notifyDataSetChanged();
                 }else{
                     intent.setAction(DownloadService.ACTION_START);
                     v.getContext().startService(intent);
                     DbOperator.updateFileInfo(fileInfo.getUrl());
-                    viewHolder.download_status.setImageResource(R.drawable.ic_pause);
                     //TODO 是否可以删除？
                     notifyDataSetChanged();
                 }
@@ -102,11 +104,23 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 //TODO 删除下载任务
                 int position=viewHolder.getAdapterPosition();
                 FileInfo fileInfo=fileInfoList.get(position);
-                Intent intent=new Intent(v.getContext(), DownloadService.class);
 
-                    intent.setAction(DownloadService.ACTION_DELETE);
+                Intent intent=new Intent(v.getContext(), DownloadService.class);
+                intent.setAction(DownloadService.ACTION_DELETE);
                     intent.putExtra("fileInfo",fileInfo);
                     v.getContext().startService(intent);
+
+                Intent delete_notify=new Intent(v.getContext(), UpdateReceiver.class);
+                delete_notify.putExtra("Action",DownloadService.ACTION_DELETE_NOTIFY);
+                delete_notify.putExtra("fileInfo",fileInfo);
+                v.getContext().sendBroadcast(delete_notify);
+
+                File dir = new File(DownloadService.DownloadPath);
+                if (!FileCleaner.deleteDir(dir)) {
+                    Toast.makeText(v.getContext(), "Already null", Toast.LENGTH_SHORT).show();
+                }
+                DbOperator.deleteThread(fileInfo.getUrl());
+                DbOperator.deleteFileInfo(fileInfo.getUrl());
                 fileInfoList.remove(position);
                   notifyItemRemoved(position);
             }
@@ -116,10 +130,19 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {;
-       FileInfo fileInfo=fileInfoList.get(position);
-        holder.download_name.setText(fileInfo.getFileName());
-        holder.download_speed.setText(fileInfo.getSpeed()+"kb/s");
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        FileInfo fileInfo=fileInfoList.get(position);
+        List<FileInfo> fileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+
+        int IsStop=fileinfolist.get(position).getIsStop();
+
+        if((IsStop%2)==0){
+            holder.download_status.setImageResource(R.drawable.ic_pause);
+        }else{
+            holder.download_status.setImageResource(R.drawable.ic_continue);
+        }
+        holder.download_name.setText(" "+fileInfo.getFileName());
+        holder.download_speed.setText(fileInfo.getSpeed()+"kB/s");
         holder.download_progressbar.setProgress(fileInfo.getFinished());
         holder.download_progress.setText(DataTransFormer.ToString(((fileInfo.getFinished()/100.0)*fileInfo.getLength())/(1024.0*1024.0))+"MB/"+DataTransFormer.ToString(fileInfo.getLength()/(1024.0*1024.0))+"MB");
     }
@@ -139,6 +162,8 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 fileinfo.setFinished(progress);
                 fileinfo.setLength(length);
                 fileinfo.setSpeed(speed);
+
+                DbOperator.updateFileInfo(fileinfo.getUrl(),progress);
 
                 notifyDataSetChanged();
                 break;

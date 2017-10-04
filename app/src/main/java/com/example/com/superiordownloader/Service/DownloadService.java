@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.com.superiordownloader.Information.FileInfo;
+import com.example.com.superiordownloader.UpdateReceiver;
+import com.example.com.superiordownloader.Util.NotificationUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,13 @@ public class DownloadService extends Service {
     public static final String ACTION_DELETE = "ACTION_DELETE";
     public static final String ACTION_UPDATE = "ACTION_UPDATE";
     public static final String ACTION_FINISHED = "ACTION_FINISHED";
+
+    public static final String ACTION_UPDATE_NOTIFY="ACTION_UPDATE_NOTIFY";
+    public static final String ACTION_START_NOTIFY="ACTION_START_NOTIFY";
+    public static final String ACTION_STOP_NOTIFY="ACTION_STOP_NOTIFY";
+    public static final String ACTION_DELETE_NOTIFY="ACTION_DELETE_NOTIFY";
+    public static final String ACTION_FINISHED_NOTIFY="ACTION_FINISHED_NOTIFY";
+    private NotificationUtil notificationUtil;
     //文件保存路径
     public static final String DownloadPath= Environment.getExternalStorageDirectory().getAbsolutePath()
             +"/download/";
@@ -57,6 +66,7 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
+        notificationUtil=new NotificationUtil(this);
         if(intent!=null){
             if(ACTION_START.equals(intent.getAction())){
                 FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
@@ -67,6 +77,8 @@ public class DownloadService extends Service {
                 DownloadTask.mExecutorService.execute(initThread);
                 Log.d(TAG, "onStartCommand: mExecutorService start success");
             }else if(ACTION_STOP.equals(intent.getAction())) {
+                Log.d(TAG, "onStartCommand: receive"+ACTION_STOP);
+
                 FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");
                 DownloadTask task=mTasks.get(fileInfo.getId());
                 if (task!=null) {
@@ -100,9 +112,14 @@ public class DownloadService extends Service {
 
                 mTasks.put(fileInfo.getId(),task);
                 //发送通知
-              /*  Intent intent=new Intent(ACTION_START);
+                Intent start_notify=new Intent(DownloadService.this, UpdateReceiver.class);
+                start_notify.putExtra("Action",ACTION_START_NOTIFY);
+                start_notify.putExtra("fileInfo",fileInfo);
+                sendBroadcast(start_notify);
+
+                Intent intent=new Intent(ACTION_START);
                 intent.putExtra("fileInfo",fileInfo);
-                sendBroadcast(intent);*/
+                sendBroadcast(intent);
                 break;
             default:break;
         }

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.example.com.superiordownloader.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
+import com.example.com.superiordownloader.UpdateReceiver;
 
 import org.litepal.crud.DataSupport;
 
@@ -101,6 +102,11 @@ public synchronized void checkAllFinished(){
     if(allFinished){
         DbOperator.deleteThread(mFileInfo.getUrl());
 
+        Intent stop_notify=new Intent(mContext,UpdateReceiver.class);
+        stop_notify.putExtra("Action",DownloadService.ACTION_FINISHED_NOTIFY);
+        stop_notify.putExtra("fileInfo", mFileInfo);
+        mContext.sendBroadcast(stop_notify);
+
         Intent intent = new Intent(DownloadService.ACTION_FINISHED);
         intent.putExtra("fileInfo", mFileInfo);
         mContext.sendBroadcast(intent);
@@ -164,8 +170,6 @@ public synchronized void checkAllFinished(){
                             Intent intent=new Intent();
                             intent.setAction(DownloadService.ACTION_UPDATE);
 
-
-
                             intent.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
                             intent.putExtra("length",mFileInfo.getLength());
                             intent.putExtra("fileinfo_id",mFileInfo.getId());
@@ -178,8 +182,17 @@ public synchronized void checkAllFinished(){
                             }
                             intent.putExtra("speed",speed);
 
+                            Intent update_notify=new Intent(mContext,UpdateReceiver.class);
+                            update_notify.putExtra("Action",DownloadService.ACTION_UPDATE_NOTIFY);
+                            update_notify.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
+                            update_notify.putExtra("length",mFileInfo.getLength());
+                            update_notify.putExtra("fileinfo_id",mFileInfo.getId());
+                            update_notify.putExtra("speed",speed);
+
 
                             mContext.sendBroadcast(intent);
+                            mContext.sendBroadcast(update_notify);
+                            Log.d(TAG, "run: Update Send");
 
                         }
                         if (mIsDelete){

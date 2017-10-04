@@ -1,5 +1,7 @@
 package com.example.com.superiordownloader;
 
+import android.util.Log;
+
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 
@@ -14,6 +16,7 @@ import static org.litepal.crud.DataSupport.findAll;
  */
 
 public class DbOperator {
+    final static String TAG="DbOperator";
 //添加线程
 static public void insertFile(FileInfo fileInfo){
 
@@ -22,16 +25,27 @@ static public void insertFile(FileInfo fileInfo){
    static public void insertThread(ThreadInfo info) {
        info.save();
    }
-//删除线程
+//删除线程/事件
+static public void  deleteFileInfo(String url) {
+    DataSupport.deleteAll(FileInfo.class,"url = ?",url);
+}
     static public void  deleteThread(String url) {
         DataSupport.deleteAll(ThreadInfo.class,"url = ?",url);
-        DataSupport.deleteAll(FileInfo.class,"url = ?",url);
     }
 //更新线程
+    static public void updateFileInfo(String url,int finish){
+        FileInfo fileInfo=new FileInfo();
+        fileInfo.setFinished(finish);
+        fileInfo.setSpeed(0);
+        fileInfo.updateAll("url = ?",url);
+        int num=fileInfo.updateAll("url = ?",url);
+        Log.d(TAG, "updateThread: "+num);
+    }
     static public void updateFileInfo(String url){
         FileInfo fileInfo=new FileInfo();
         List<FileInfo> infolist=DataSupport.where("url = ?",url).find(FileInfo.class);
         fileInfo.setIsStop(infolist.get(0).getIsStop()+1);
+        fileInfo.setSpeed(0);
         fileInfo.updateAll("url = ?",url);
     }
 
@@ -41,7 +55,6 @@ static public void  updateThread(String url, int id, int finished) {
     threadInfo.updateAll("url = ? and id = ?",url,Integer.toString(id));
     FileInfo fileInfo=new FileInfo();
     fileInfo.setFinished(finished);
-    fileInfo.updateAll("url = ?",url);
 }
     static public void  updateThread(String url,boolean isStop) {
         ThreadInfo threadInfo=new ThreadInfo();
