@@ -162,7 +162,6 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 fileinfo.setLength(length);
                 fileinfo.setSpeed(speed);
 
-                DbOperator.updateFileInfo(fileinfo.getUrl(),progress);
 
                 notifyDataSetChanged();
                 break;

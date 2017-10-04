@@ -165,12 +165,14 @@ public synchronized void checkAllFinished(){
                         }
                         //不频繁地更新UI
                         if(System.currentTimeMillis()-lastloopTime>1000){
+                            Log.d(TAG, "run: Downloading");
                             looptimes++;
 
                             Intent intent=new Intent();
                             intent.setAction(DownloadService.ACTION_UPDATE);
 
-                            intent.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
+                            long finished=(mFinished)*100/(mFileInfo.getLength());
+                            intent.putExtra("finished",finished);//完成度
                             intent.putExtra("length",mFileInfo.getLength());
                             intent.putExtra("fileinfo_id",mFileInfo.getId());
                             if(looptimes>=3){
@@ -181,6 +183,7 @@ public synchronized void checkAllFinished(){
                                 looptimes=0;
                             }
                             intent.putExtra("speed",speed);
+                            DbOperator.updateFileInfo(mFileInfo.getUrl(),(int)finished);
 
                             Intent update_notify=new Intent(mContext,UpdateReceiver.class);
                             update_notify.putExtra("Action",DownloadService.ACTION_UPDATE_NOTIFY);
