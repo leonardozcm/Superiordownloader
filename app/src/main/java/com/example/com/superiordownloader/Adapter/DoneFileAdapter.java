@@ -1,5 +1,6 @@
 package com.example.com.superiordownloader.Adapter;
 
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.Util.DbOperator;
+import com.example.com.superiordownloader.Util.OpenFileUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -51,7 +53,10 @@ public class DoneFileAdapter extends RecyclerView.Adapter<DoneFileAdapter.ViewHo
         viewHolder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO 打开文件逻辑
+                int position=viewHolder.getAdapterPosition();
+                FileInfo fileInfo=mFileInfoList.get(position);
+                Intent intent= OpenFileUtil.openFile(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+                v.getContext().startActivity(intent);
             }
         });
         viewHolder.done_delete.setOnClickListener(new View.OnClickListener() {

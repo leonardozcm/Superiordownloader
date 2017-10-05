@@ -69,13 +69,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 FileInfo fileInfo=fileInfoList.get(position);
                 Intent intent=new Intent(v.getContext(), DownloadService.class);
                 intent.putExtra("fileInfo",fileInfo);
-               /* List<ThreadInfo> threadInfoList= DbOperator.queryThreads(fileInfo.getUrl());
-                for (ThreadInfo info:threadInfoList
-                     ) {
-                    if(info.isStop()){
-                        IsStop=true;break;
-                    }
-                }*/
+
                List<FileInfo> fileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
                 int IsStop=fileinfolist.get(0).getIsStop();
                 Log.d(TAG, "onClick: "+IsStop);

@@ -1,12 +1,18 @@
 package com.example.com.superiordownloader;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.example.com.superiordownloader.Information.FileInfo;
+import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.Util.NotificationUtil;
+import com.example.com.superiordownloader.Util.OpenFileUtil;
 
 import static android.content.ContentValues.TAG;
 import static com.example.com.superiordownloader.Service.DownloadService.ACTION_DELETE_NOTIFY;
@@ -39,6 +45,24 @@ NotificationUtil notificationUtil;
             Log.d("Service", "onReceive: "+fileinfo_id);
             int length= fileInfo.getLength();
             notificationUtil.cancelNotification(fileInfo.getId());
+
+
+            Intent openfile= OpenFileUtil.openFile(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+            PendingIntent pi=PendingIntent.getActivity(context,0,openfile,0);
+
+
+            NotificationManager manager=(NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+            PendingIntent pIntent = PendingIntent.getActivity(context,1,intent,0);
+            Notification notification=new NotificationCompat.Builder(context)
+                    .setContentTitle("SuperiorDownloader")
+                    .setSmallIcon(R.drawable.ic_finish)
+                    .setContentText(fileInfo.getFileName()+"下载完毕")
+                    .setContentIntent(pi)
+                    .setFullScreenIntent(pIntent,true)
+                    .setAutoCancel(true)
+                    .build();
+            notification.defaults = Notification.DEFAULT_ALL;
+            manager.notify(1,notification);
         }else if(ACTION_DELETE_NOTIFY.equals(intent.getStringExtra("Action"))){
             //删除任务同时删除通知
             FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");

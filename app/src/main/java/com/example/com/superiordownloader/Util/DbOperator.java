@@ -66,6 +66,12 @@ static public void  updateThread(String url, int id, int finished) {
         List<ThreadInfo> list= findAll(ThreadInfo.class);
         return  list;
     }
+    static public List<FileInfo> queryFiles(String url) {
+        List<FileInfo> list =DataSupport.where("url = ?",url).find(FileInfo.class);
+        return list;
+    }
+
+
     static public List<ThreadInfo> queryThreads(String url) {
     List<ThreadInfo> list =DataSupport.where("url = ?",url).find(ThreadInfo.class);
     return list;

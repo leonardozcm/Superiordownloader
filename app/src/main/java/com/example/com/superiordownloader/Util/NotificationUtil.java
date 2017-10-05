@@ -37,7 +37,7 @@ if(mNotificationManager==null){
 }
     }
 
-    public void show(FileInfo fileInfo){
+   public void show(FileInfo fileInfo){
         if(!mNotifications.containsKey(fileInfo.getId())){
 
 

@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 LayoutInflater layoutInflater = LayoutInflater.from(this);
                 final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
                 final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+                url=editText.getText().toString();//第一次给权限时要用
 
                 builder.setView(dialogview);
                 builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
@@ -123,7 +124,11 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                         } else {
                                   try{
                                       url=editText.getText().toString();
-                                      if(DbOperator.queryThreads(url).size()==0){
+                                      if(DbOperator.queryThreads(url).size()!=0){
+                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
+                                      }else if(DbOperator.queryFiles(url).size()!=0){
+                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n File Already Exist, Please Check again.",Toast.LENGTH_LONG).show();
+                                      }else {
                                           Intent intent = new Intent(MainActivity.this, DownloadService.class);
                                           intent.setAction(DownloadService.ACTION_START);
 
@@ -140,12 +145,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                                           doingFragment.fileAdapter.fileInfoList.add(fileInfo);
                                           Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
                                           doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
-                                      }else {
-                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
                                       }
-
-
-
                                   }catch (SecurityException e){
                                       e.printStackTrace();
                                   }
@@ -235,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 doneFragment.mFileInfoList.add(fileInfo);
                 doneFragment.mDoneFileAdapter.notifyItemInserted(doneFragment.mFileInfoList.size());
                 Toast.makeText(MainActivity.this, "下载完毕", Toast.LENGTH_SHORT).show();
+
             } else if (DownloadService.ACTION_START.equals(intent.getAction())) {
 
                 Toast.makeText(MainActivity.this, "下载开始", Toast.LENGTH_SHORT).show();
