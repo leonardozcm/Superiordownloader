@@ -13,7 +13,6 @@ import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.Util.DbOperator;
-import com.example.com.superiordownloader.Util.FileCleaner;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,8 +62,8 @@ public class DoneFileAdapter extends RecyclerView.Adapter<DoneFileAdapter.ViewHo
                 DbOperator.deleteThread(fileInfo.getUrl());
                 DbOperator.deleteFileInfo(fileInfo.getUrl());
 
-                File dir = new File(DownloadService.DownloadPath+fileInfo.getFileName());
-                if (!FileCleaner.deleteDir(dir)) {
+                File file = new File(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+                if (!file.delete()) {
                     Toast.makeText(v.getContext(), "Already null", Toast.LENGTH_SHORT).show();
                 }
                 notifyItemRemoved(position);
