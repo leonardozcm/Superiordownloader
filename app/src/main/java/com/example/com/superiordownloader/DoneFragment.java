@@ -3,19 +3,19 @@ package com.example.com.superiordownloader;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.com.superiordownloader.Adapter.DoneFileAdapter;
+import com.example.com.superiordownloader.Information.FileInfo;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link DoneFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link DoneFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import org.litepal.crud.DataSupport;
+
+import java.util.List;
+
 public class DoneFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -26,20 +26,14 @@ public class DoneFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    private View view;
+ public DoneFileAdapter mDoneFileAdapter;
+    public List<FileInfo> mFileInfoList;
 
     public DoneFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment DoneFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static DoneFragment newInstance(String param1, String param2) {
         DoneFragment fragment = new DoneFragment();
         Bundle args = new Bundle();
@@ -50,7 +44,7 @@ public class DoneFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -60,9 +54,15 @@ public class DoneFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater,  @Nullable ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_done, container, false);
+                             @Nullable Bundle savedInstanceState) {
+       view=inflater.inflate(R.layout.fragment_done, container, false);
+        mFileInfoList= DataSupport.where("finished = ?",Integer.toString(100)).find(FileInfo.class);
+        RecyclerView recyclerView=(RecyclerView)view.findViewById(R.id.done_list);
+        LinearLayoutManager layoutManager=new LinearLayoutManager(view.getContext());
+        recyclerView.setLayoutManager(layoutManager);
+        mDoneFileAdapter=new DoneFileAdapter(mFileInfoList);
+        recyclerView.setAdapter(mDoneFileAdapter);
+        return view;
     }
 
 }

@@ -1,5 +1,5 @@
 
-package com.example.com.superiordownloader.adapter;
+package com.example.com.superiordownloader.Adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

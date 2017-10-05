@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.example.com.superiordownloader.DbOperator;
+import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.UpdateReceiver;
@@ -56,7 +56,8 @@ public class DownloadTask {
         /*
        如果是 第一次下载
          */
-        if(list.size()==0){
+        boolean IsFirst=(list.size()==0);
+        if(IsFirst){
             int length=mFileInfo.getLength();
             int block=length/mThreadCount;//单个url的线程数
             /*
@@ -82,8 +83,6 @@ public class DownloadTask {
              */
             if(!DbOperator.isOneExists(info)){
                 DbOperator.insertThread(info);
-            }else {
-
             }
             //启动线程池管理线程
             DownloadTask.mExecutorService.execute(thread);
@@ -102,6 +101,7 @@ public synchronized void checkAllFinished(){
         }
     }
     if(allFinished){
+        DbOperator.updateFileInfo(mFileInfo.getUrl(),100);
         DbOperator.deleteThread(mFileInfo.getUrl());
 
         Intent stop_notify=new Intent(mContext,UpdateReceiver.class);
@@ -189,7 +189,7 @@ public synchronized void checkAllFinished(){
 
                             Intent update_notify=new Intent(mContext,UpdateReceiver.class);
                             update_notify.putExtra("Action",DownloadService.ACTION_UPDATE_NOTIFY);
-                            update_notify.putExtra("finished",(mFinished)*100/(mFileInfo.getLength()));//完成度
+                            update_notify.putExtra("finished",finished);//完成度
                             update_notify.putExtra("length",mFileInfo.getLength());
                             update_notify.putExtra("fileinfo_id",mFileInfo.getId());
                             update_notify.putExtra("speed",speed);

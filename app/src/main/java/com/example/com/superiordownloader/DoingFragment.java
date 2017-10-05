@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.com.superiordownloader.Information.FileInfo;
-import com.example.com.superiordownloader.adapter.FileAdapter;
+import com.example.com.superiordownloader.Adapter.FileAdapter;
 
 import org.litepal.crud.DataSupport;
 
@@ -71,7 +71,7 @@ public class DoingFragment extends Fragment {
     }
 
     private void initFiles(){
-        mFileInfoList=DataSupport.findAll(FileInfo.class);
+        mFileInfoList=DataSupport.where("finished != 100").find(FileInfo.class);
     }
 
 }

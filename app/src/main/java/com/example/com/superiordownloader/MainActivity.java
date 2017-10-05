@@ -30,9 +30,10 @@ import android.widget.Toast;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.Service.DownloadService;
+import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Util.FileCleaner;
 import com.example.com.superiordownloader.Util.UrlNameGeter;
-import com.example.com.superiordownloader.adapter.ViewPagerAdapter;
+import com.example.com.superiordownloader.Adapter.ViewPagerAdapter;
 
 import org.litepal.crud.DataSupport;
 
@@ -122,22 +123,29 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                         } else {
                                   try{
                                       url=editText.getText().toString();
-                                      Intent intent = new Intent(MainActivity.this, DownloadService.class);
-                                      intent.setAction(DownloadService.ACTION_START);
+                                      if(DbOperator.queryThreads(url).size()==0){
+                                          Intent intent = new Intent(MainActivity.this, DownloadService.class);
+                                          intent.setAction(DownloadService.ACTION_START);
 
-                                      int max = 0;
-                                      max = DataSupport.max(FileInfo.class, "id", int.class);
-                                      FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
-                                      Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
-                                      DbOperator.insertFile(fileInfo);
-                                      Log.d("Add fileinfo", ":"+fileInfo.toString());
+                                          int max = 0;
+                                          max = DataSupport.max(FileInfo.class, "id", int.class);
+                                          FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
+                                          Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
+                                          DbOperator.insertFile(fileInfo);
+                                          Log.d("Add fileinfo", ":"+fileInfo.toString());
 
-                                      intent.putExtra("fileInfo", fileInfo);
-                                      startService(intent);
-                                      Log.d("MainActivity", "onClick: add Intent send");
-                                      doingFragment.fileAdapter.fileInfoList.add(fileInfo);
-                                      Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
-                                      doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
+                                          intent.putExtra("fileInfo", fileInfo);
+                                          startService(intent);
+                                          Log.d("MainActivity", "onClick: add Intent send");
+                                          doingFragment.fileAdapter.fileInfoList.add(fileInfo);
+                                          Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
+                                          doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
+                                      }else {
+                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
+                                      }
+
+
+
                                   }catch (SecurityException e){
                                       e.printStackTrace();
                                   }
@@ -223,6 +231,9 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 Log.d("MainActivity", "onReceive: "+fileinfo_id);
                 int length= fileInfo.getLength();
                 doingFragment.fileAdapter.updataProgress(fileinfo_id, 100, 0,length);
+
+                doneFragment.mFileInfoList.add(fileInfo);
+                doneFragment.mDoneFileAdapter.notifyItemInserted(doneFragment.mFileInfoList.size());
                 Toast.makeText(MainActivity.this, "下载完毕", Toast.LENGTH_SHORT).show();
             } else if (DownloadService.ACTION_START.equals(intent.getAction())) {
 

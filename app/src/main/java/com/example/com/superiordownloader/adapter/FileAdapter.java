@@ -1,4 +1,4 @@
-package com.example.com.superiordownloader.adapter;
+package com.example.com.superiordownloader.Adapter;
 
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
@@ -11,7 +11,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.com.superiordownloader.DbOperator;
+import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
@@ -157,17 +157,21 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     更新UI
      */
     public void updataProgress(int file_id,int progress,double speed,int length){
+        int pos=0;
         for (FileInfo fileinfo:fileInfoList) {
             if(fileinfo.getId()==file_id){
-
-                fileinfo.setFinished(progress);
-                fileinfo.setLength(length);
-                fileinfo.setSpeed(speed);
-
-
-                notifyDataSetChanged();
+if(progress==100){
+    fileInfoList.remove(pos);
+    notifyItemRemoved(pos);
+}else {
+    fileinfo.setFinished(progress);
+    fileinfo.setLength(length);
+    fileinfo.setSpeed(speed);
+    notifyDataSetChanged();
+}
                 break;
             }
+            pos++;
         }
 
        // FileInfo info=fileInfoList.get(id);
