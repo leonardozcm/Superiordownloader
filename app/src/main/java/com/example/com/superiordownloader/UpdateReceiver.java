@@ -38,7 +38,7 @@ NotificationUtil notificationUtil;
             int fileinfo_id = fileInfo.getId();
             Log.d("Service", "onReceive: "+fileinfo_id);
             int length= fileInfo.getLength();
-            notificationUtil.updateNotification(fileinfo_id, 100, 0,length);
+            notificationUtil.cancelNotification(fileInfo.getId());
         }else if(ACTION_DELETE_NOTIFY.equals(intent.getStringExtra("Action"))){
             //删除任务同时删除通知
             FileInfo fileInfo=(FileInfo)intent.getSerializableExtra("fileInfo");

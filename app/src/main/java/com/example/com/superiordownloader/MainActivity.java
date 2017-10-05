@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 LayoutInflater layoutInflater = LayoutInflater.from(this);
                 final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
                 final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
-                url=editText.getText().toString();
+
                 builder.setView(dialogview);
                 builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
                     @Override
@@ -121,20 +121,23 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                             ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
                         } else {
                                   try{
+                                      url=editText.getText().toString();
                                       Intent intent = new Intent(MainActivity.this, DownloadService.class);
                                       intent.setAction(DownloadService.ACTION_START);
 
                                       int max = 0;
                                       max = DataSupport.max(FileInfo.class, "id", int.class);
                                       FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
+                                      Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
                                       DbOperator.insertFile(fileInfo);
+                                      Log.d("Add fileinfo", ":"+fileInfo.toString());
 
                                       intent.putExtra("fileInfo", fileInfo);
-                                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                       startService(intent);
                                       Log.d("MainActivity", "onClick: add Intent send");
-                                      doingFragment.mFileInfoList.add(fileInfo);
-                                      doingFragment.fileAdapter.notifyItemInserted(0);
+                                      doingFragment.fileAdapter.fileInfoList.add(fileInfo);
+                                      Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
+                                      doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
                                   }catch (SecurityException e){
                                       e.printStackTrace();
                                   }
@@ -245,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                     intent.putExtra("fileInfo", fileInfo);
                     startService(intent);
                     Log.d("MainActivity", "onClick: add Intent send");
+                    Log.d("MainActivity", "onRequestPermissionsResult: "+doingFragment.fileAdapter.getItemCount());
                     doingFragment.mFileInfoList.add(fileInfo);
                     doingFragment.fileAdapter.notifyItemInserted(0);
                 }catch (SecurityException e){

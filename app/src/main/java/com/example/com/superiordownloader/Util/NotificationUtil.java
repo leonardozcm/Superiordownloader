@@ -74,6 +74,7 @@ if(mNotificationManager==null){
 
     public void cancelNotification(int id){
         Log.d(TAG, "cancelNotification: "+id);
+        ServiceCollecetor.getService().stopForeground(true);
         mNotificationManager.cancel(id);
         mNotifications.remove(id);
     }
@@ -84,7 +85,7 @@ if(mNotificationManager==null){
         if(notification!=null){
             notification.contentView.setProgressBar(R.id.notify_progreess,100,progress,false);
             notification.contentView.setTextViewText(R.id.notify_downloadsize,DataTransFormer.ToString(((progress/100.0)*length)/(1024.0*1024.0))+"MB/"+DataTransFormer.ToString(length/(1024.0*1024.0))+"MB");
-            notification.contentView.setTextViewText(R.id.notify_downloadspeed,speed+"kB/s");
+            notification.contentView.setTextViewText(R.id.notify_downloadspeed,(int)speed+"kB/s");
             mNotificationManager.notify(id,notification);
 
         }

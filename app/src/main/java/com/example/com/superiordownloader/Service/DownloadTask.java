@@ -77,16 +77,18 @@ public class DownloadTask {
         for (ThreadInfo info:list) {
             DownloadThread thread =new DownloadThread(info);
             Log.d(TAG, "At LOOP threadInfo.getId()"+Integer.toString(info.getId()));
-
-            //启动线程池管理线程
-            DownloadTask.mExecutorService.execute(thread);
-            mThreadlist.add(thread);
             /*
             防止重复下载
              */
             if(!DbOperator.isOneExists(info)){
                 DbOperator.insertThread(info);
+            }else {
+
             }
+            //启动线程池管理线程
+            DownloadTask.mExecutorService.execute(thread);
+            mThreadlist.add(thread);
+
         }
     }
     /*
@@ -199,7 +201,7 @@ public synchronized void checkAllFinished(){
 
                         }
                         if (mIsDelete){
-                            Log.d(TAG, "run: Delete");
+                            Log.d("DownloadTask", "run: Delete");
                             DbOperator.deleteThread(threadInfo.getUrl());
                             if(file.isFile()){
                                 file.delete();

@@ -33,7 +33,7 @@ import static android.content.ContentValues.TAG;
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
-    private List<FileInfo> fileInfoList=new ArrayList<>();
+    public List<FileInfo> fileInfoList=new ArrayList<>();
     static class ViewHolder extends RecyclerView.ViewHolder{
         ImageButton download_status;
         TextView download_name;
@@ -59,7 +59,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
     @Override
     public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
-        final View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.download_item,parent,false);
+         View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.download_item,parent,false);
         final ViewHolder viewHolder=new ViewHolder(view);
         viewHolder.download_status.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,8 +120,8 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 }
                 DbOperator.deleteThread(fileInfo.getUrl());
                 DbOperator.deleteFileInfo(fileInfo.getUrl());
+                notifyItemRemoved(position);
                 fileInfoList.remove(position);
-                  notifyItemRemoved(position);
             }
         });
 
@@ -131,9 +131,11 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         FileInfo fileInfo=fileInfoList.get(position);
-        List<FileInfo> fileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+        Log.d(TAG, "onBindViewHolder: POSTITION = "+position);
+        List<FileInfo> mFileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+        Log.d(TAG, "onBindViewHolder: "+fileInfo.getUrl());
 
-        int IsStop=fileinfolist.get(position).getIsStop();
+        int IsStop=mFileinfolist.get(0).getIsStop();
 
         if((IsStop%2)==0){
             holder.download_status.setImageResource(R.drawable.ic_pause);
@@ -141,7 +143,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
             holder.download_status.setImageResource(R.drawable.ic_continue);
         }
         holder.download_name.setText(" "+fileInfo.getFileName());
-        holder.download_speed.setText(fileInfo.getSpeed()+"kB/s");
+        holder.download_speed.setText((int)fileInfo.getSpeed()+"kB/s");
         holder.download_progressbar.setProgress(fileInfo.getFinished());
         holder.download_progress.setText(DataTransFormer.ToString(((fileInfo.getFinished()/100.0)*fileInfo.getLength())/(1024.0*1024.0))+"MB/"+DataTransFormer.ToString(fileInfo.getLength()/(1024.0*1024.0))+"MB");
     }
