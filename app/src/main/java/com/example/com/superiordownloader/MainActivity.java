@@ -52,10 +52,20 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private DoneFragment doneFragment;
     private String url;
     public UIRecive mRecive;
-
+   private Intent intent;//获取浏览器Intent
    // private Binder mbinder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        intent=getIntent();
+        if(intent.getAction().equals("android.intent.action.VIEW")){
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater layoutInflater = LayoutInflater.from(this);
+            final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
+            url=intent.getDataString();//第一次给权限时要用
+            addTask(builder,dialogview,url);
+        }
+        Log.d("INTENT", "onCreate: "+intent.getAction());
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

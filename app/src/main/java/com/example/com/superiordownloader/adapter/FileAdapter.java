@@ -79,6 +79,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
                     v.getContext().startService(intent);
                     DbOperator.updateFileInfo(fileInfo.getUrl());
+                    fileInfo.setSpeed(0);
                     //TODO 是否可以删除？
                     notifyDataSetChanged();
                 }else{
