@@ -2,6 +2,7 @@ package com.example.com.superiordownloader;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -27,13 +28,13 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.com.superiordownloader.Adapter.ViewPagerAdapter;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Util.FileCleaner;
 import com.example.com.superiordownloader.Util.UrlNameGeter;
-import com.example.com.superiordownloader.Adapter.ViewPagerAdapter;
 
 import org.litepal.crud.DataSupport;
 
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private DoneFragment doneFragment;
     private String url;
     public UIRecive mRecive;
+
    // private Binder mbinder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,12 +84,21 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         intentFilter.addAction(DownloadService.ACTION_FINISHED);
         intentFilter.addAction(DownloadService.ACTION_START);
         registerReceiver(mRecive, intentFilter);
+
+        Log.d("MainActivty", "onCreate: ");
+        registerClipEvents();
+    }
+
+    @Override
+    protected void onRestart(){
+        //registerClipEvents();
+        super.onRestart();
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(mRecive);
-        //stopService(new Intent(this,DownloadService.class));
+        //  stopService(new Intent(this,DownloadService.class));
         super.onDestroy();
     }
 
@@ -107,54 +118,13 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
 
         switch (id) {
             case R.id.add:
+                Log.d("MainActivty", "onOptionsItemSelected: add--------");
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 LayoutInflater layoutInflater = LayoutInflater.from(this);
                 final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
                 final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
                 url=editText.getText().toString();//第一次给权限时要用
-
-                builder.setView(dialogview);
-                builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
-                        }else if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
-                        } else {
-                                  try{
-                                      url=editText.getText().toString();
-                                      if(DbOperator.queryThreads(url).size()!=0){
-                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
-                                      }else if(DbOperator.queryFiles(url).size()!=0){
-                                          Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n File Already Exist, Please Check again.",Toast.LENGTH_LONG).show();
-                                      }else {
-                                          Intent intent = new Intent(MainActivity.this, DownloadService.class);
-                                          intent.setAction(DownloadService.ACTION_START);
-
-                                          int max = 0;
-                                          max = DataSupport.max(FileInfo.class, "id", int.class);
-                                          FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
-                                          Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
-                                          DbOperator.insertFile(fileInfo);
-                                          Log.d("Add fileinfo", ":"+fileInfo.toString());
-
-                                          intent.putExtra("fileInfo", fileInfo);
-                                          startService(intent);
-                                          Log.d("MainActivity", "onClick: add Intent send");
-                                          doingFragment.fileAdapter.fileInfoList.add(fileInfo);
-                                          Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
-                                          doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
-                                      }
-                                  }catch (SecurityException e){
-                                      e.printStackTrace();
-                                  }
-
-                        }
-                    }
-                });
-                builder.setNegativeButton("取消", null);
-                builder.show();
+                addTask(builder,dialogview,url);
                 break;
             case R.id.delete:
                 DataSupport.deleteAll(ThreadInfo.class);
@@ -273,4 +243,85 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         default:break;
     }
 }
+
+    /**
+     * 剪切板监听
+     */
+    private void registerClipEvents(){
+    Log.d("MainActivity", "registerClipEvents:---------------");
+    final ClipboardManager manager=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+    manager.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener(){
+        private long previousTime=0;
+        @Override
+        public void onPrimaryClipChanged() {
+            long now=System.currentTimeMillis();
+            if(now-previousTime<200){
+                previousTime=now;
+                return;
+            }
+            previousTime=now;
+            if(manager.hasPrimaryClip()&&manager.getPrimaryClip().getItemCount()>0){
+                CharSequence addedText=manager.getPrimaryClip().getItemAt(0).getText();
+                if(addedText!=null){
+                    Log.d("MainActivty", "onPrimaryClipChanged: ");
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+                    final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
+                    final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+                    url=addedText.toString();//第一次给权限时要用
+                    editText.setText(url);
+                    addTask(builder,dialogview,url);
+                }
+            }
+        }
+    });
+}
+
+public void addTask(AlertDialog.Builder builder,View dialogview,final String url){
+    Log.d("MainActivty", "addTask: ------------------");
+
+    builder.setView(dialogview);
+    builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            if(ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+            }else if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+            } else {
+                try{
+                    if(DbOperator.queryThreads(url).size()!=0){
+                        Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
+                    }else if(DbOperator.queryFiles(url).size()!=0){
+                        Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n File Already Exist, Please Check again.",Toast.LENGTH_LONG).show();
+                    }else {
+                        Intent intent = new Intent(MainActivity.this, DownloadService.class);
+                        intent.setAction(DownloadService.ACTION_START);
+
+                        int max = 0;
+                        max = DataSupport.max(FileInfo.class, "id", int.class);
+                        FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
+                        Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
+                        DbOperator.insertFile(fileInfo);
+                        Log.d("Add fileinfo", ":"+fileInfo.toString());
+
+                        intent.putExtra("fileInfo", fileInfo);
+                        startService(intent);
+                        Log.d("MainActivity", "onClick: add Intent send");
+                        doingFragment.fileAdapter.fileInfoList.add(fileInfo);
+                        Log.d("MainActivity", "onClick: "+doingFragment.fileAdapter.fileInfoList.size());
+                        doingFragment.fileAdapter.notifyItemInserted(doingFragment.fileAdapter.fileInfoList.size()-1);
+                    }
+                }catch (SecurityException e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    });
+    builder.setNegativeButton("取消", null);
+    builder.show();
+}
+
+
 }

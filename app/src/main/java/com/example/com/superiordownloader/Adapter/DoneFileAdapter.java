@@ -81,7 +81,7 @@ public class DoneFileAdapter extends RecyclerView.Adapter<DoneFileAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         FileInfo fileInfo=mFileInfoList.get(position);
-        holder.done_name.setText(fileInfo.getFileName());
+        holder.done_name.setText(" "+fileInfo.getFileName());
     }
 
     @Override
