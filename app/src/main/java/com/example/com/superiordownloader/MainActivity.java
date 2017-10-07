@@ -34,6 +34,7 @@ import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Util.FileCleaner;
+import com.example.com.superiordownloader.Util.UrlChecker;
 import com.example.com.superiordownloader.Util.UrlNameGeter;
 
 import org.litepal.crud.DataSupport;
@@ -56,13 +57,28 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
    // private Binder mbinder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ClipboardManager manager=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        String clipboard_str=manager.getText().toString();
+        Log.d("Main", "onCreate: "+UrlChecker.isValidUrl(clipboard_str));
+        if(UrlChecker.isValidUrl(clipboard_str)){
+            manager.setText(null);//清空剪切板
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater layoutInflater = LayoutInflater.from(this);
+            final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
+            EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+            editText.setText(clipboard_str);
+            addTask(builder,dialogview,editText);
+        }
+
         intent=getIntent();
         if(intent.getAction().equals("android.intent.action.VIEW")){
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater layoutInflater = LayoutInflater.from(this);
             final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
             url=intent.getDataString();//第一次给权限时要用
-            addTask(builder,dialogview,url);
+            EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+            editText.setText(url);
+            addTask(builder,dialogview,editText);
         }
         Log.d("INTENT", "onCreate: "+intent.getAction());
 
@@ -132,9 +148,9 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 LayoutInflater layoutInflater = LayoutInflater.from(this);
                 final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
-                final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+                EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
                 url=editText.getText().toString();//第一次给权限时要用
-                addTask(builder,dialogview,url);
+                addTask(builder,dialogview,editText);
                 break;
             case R.id.delete:
                 DataSupport.deleteAll(ThreadInfo.class);
@@ -280,20 +296,26 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                     final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
                     url=addedText.toString();//第一次给权限时要用
                     editText.setText(url);
-                    addTask(builder,dialogview,url);
+                    addTask(builder,dialogview,editText);
                 }
             }
         }
     });
 }
 
-public void addTask(AlertDialog.Builder builder,View dialogview,final String url){
+public void addTask(AlertDialog.Builder builder, View dialogview, final EditText editText){
     Log.d("MainActivty", "addTask: ------------------");
 
     builder.setView(dialogview);
     builder.setPositiveButton("下载", new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
+            String url=editText.getText().toString();
+            if(!UrlChecker.isValidUrl(url)){
+                //如果不合法
+                Toast.makeText(MainActivity.this,"The Url: \""+url+"\" is invalid.\nPlease Check Again",Toast.LENGTH_LONG).show();
+                return;
+            }
             if(ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
             }else if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){

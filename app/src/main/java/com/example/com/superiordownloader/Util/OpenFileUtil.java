@@ -16,7 +16,7 @@ public class OpenFileUtil {
         File file = new File(filePath);
         if (!file.exists()) return null;
 
-        String end = file.getName().substring(file.getName().lastIndexOf("." + 1, file.getName().length())).toLowerCase();//拓展名
+        String end = file.getName().substring(file.getName().lastIndexOf(".")+ 1);//拓展名
 
         if (end.equals("m4a") || end.equals("mp3") || end.equals("mid") || end.equals("xmf") || end.equals("ogg") || end.equals("wav")) {
             return getAudioFileIntent(filePath);

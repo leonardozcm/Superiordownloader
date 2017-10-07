@@ -180,7 +180,7 @@ public class DownloadService extends BaseService {
                 mHandler.sendMessage(msg);
                 msg.setTarget(mHandler);
                 Log.d(TAG, "run: msg send");
-            }catch (Exception e){
+            } catch (Exception e){
                 e.printStackTrace();
             }finally {
                 if (conn != null) {

@@ -3,11 +3,12 @@ package com.example.com.superiordownloader.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
-import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.UpdateReceiver;
+import com.example.com.superiordownloader.Util.DbOperator;
 
 import org.litepal.crud.DataSupport;
 
@@ -225,6 +226,10 @@ public synchronized void checkAllFinished(){
                             return;
                         }
                     }
+                }else {
+                    //url无效的情况下
+
+                    Toast.makeText(mContext, "This URL is invali", Toast.LENGTH_SHORT).show();
                 }
                 isFinished=true;
                 //判断是否所有线程都执行完毕

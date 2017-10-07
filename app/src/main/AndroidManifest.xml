@@ -29,10 +29,10 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http"
                     android:host="*"/>
-                <data android:pathPattern=".*\\.apk"/>
-                <data android:pathPattern=".*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.apk" />
+                <data android:pathPattern=".*\\..*"/>
+                <data android:pathPattern=".*\\..*\\..*" />
+                <data android:pathPattern=".*\\..*\\..*\\..*" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*" />
             </intent-filter>
         </activity>
 
