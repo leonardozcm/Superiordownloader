@@ -1,9 +1,15 @@
 package com.example.com.superiordownloader.Util;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.support.v4.content.FileProvider;
+import android.util.Log;
 
 import java.io.File;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * 用于打开不同类型的文件
@@ -11,151 +17,219 @@ import java.io.File;
  */
 
 public class OpenFileUtil {
+    private Context mContext;
+    private Uri uri=null;
+    public OpenFileUtil(Context context){
+        mContext=context;
+    }
 
-    public static Intent openFile(String filePath) {
-        File file = new File(filePath);
+    public Intent openFile(String mfilePath) {
+        File file = new File(mfilePath);
+        Log.d(TAG, "openFile: "+mfilePath);
         if (!file.exists()) return null;
+       // String filePath=mfilePath;
+      /*  if(Build.VERSION.SDK_INT>=24){
+            uri= FileProvider.getUriForFile(mContext,"com.example.com.superiordownloader.fileprovider",file);
+            filePath=uri.toString();
+        }*/
 
         String end = file.getName().substring(file.getName().lastIndexOf(".")+ 1);//拓展名
 
         if (end.equals("m4a") || end.equals("mp3") || end.equals("mid") || end.equals("xmf") || end.equals("ogg") || end.equals("wav")) {
-            return getAudioFileIntent(filePath);
+            return getAudioFileIntent(file);
         } else if (end.equals("3gp") || end.equals("mp4")) {
-            return getAudioFileIntent(filePath);
+            return getVideoFileIntent(file);
         } else if (end.equals("jpg") || end.equals("gif") || end.equals("png") ||
                 end.equals("jpeg") || end.equals("bmp")) {
-            return getImageFileIntent(filePath);
+            return getImageFileIntent(file);
         } else if (end.equals("apk")) {
-            return getApkFileIntent(filePath);
+            return getApkFileIntent(file);
         } else if (end.equals("ppt")) {
-            return getPPTFileIntent(filePath);
+            return getPPTFileIntent(file);
         } else if (end.equals("xls")) {
-            return getExcelFileIntent(filePath);
+            return getExcelFileIntent(file);
         } else if (end.equals("doc")) {
-            return getWordFileIntent(filePath);
+            return getWordFileIntent(file);
         } else if (end.equals("pdf")) {
-            return getPDFFileIntent(filePath);
+            return getPDFFileIntent(file);
         } else if (end.equals("chm")) {
-            return getChmFileIntent(filePath);
+            return getChmFileIntent(file);
         } else if (end.equals("txt")) {
-            return getTextFileIntent(filePath, false);
+            return getTextFileIntent(file);
         } else {
-            return getAllIntent(filePath);
+            return getAllIntent(file);
         }
     }
 
-    public static Intent getAllIntent(String param) {
+    public Intent getAllIntent(File file) {
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(Intent.ACTION_VIEW);
-        Uri uri = Uri.fromFile(new File(param));
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
         intent.setDataAndType(uri, "*/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
-    public static Intent getApkFileIntent(String param) {
+    public  Intent getApkFileIntent(File file) {
         Intent intent = new Intent();
+
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(android.content.Intent.ACTION_VIEW);
-        Uri uri = Uri.fromFile(new File(param));
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
         intent.setDataAndType(uri, "application/vnd.android.package-archive");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
-    public static Intent getVideoFileIntent(String param) {
+    public Intent getVideoFileIntent(File file) {
         Intent intent = new Intent("android.intent.action.VIEW");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
         intent.putExtra("oneshot", 0);
         intent.putExtra("configchange", 0);
-        Uri uri = Uri.fromFile(new File(param));
         intent.setDataAndType(uri, "video/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
-    public static Intent getAudioFileIntent(String param) {
+    public Intent getAudioFileIntent(File file) {
         Intent intent = new Intent("android.intent.action.VIEW");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
         intent.putExtra("oneshot", 0);
         intent.putExtra("configchange", 0);
-        Uri uri = Uri.fromFile(new File(param));
         intent.setDataAndType(uri, "audio/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
-    public static Intent getHtmlFileIntent(String param) {
+   /* public Intent getHtmlFileIntent(String param) {
         Uri uri = Uri.parse(param).buildUpon().encodedAuthority("com.android.htmlfileprovider").scheme("content").encodedPath(param).build();
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", new File(uri.getPath()));
+        }else {
+            uri = Uri.fromFile(new File(param));
+        }
         Intent intent = new Intent("android.intent.action.VIEW");
         intent.setDataAndType(uri, "text/html");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
-    }
+    }*/
 
-    public static Intent getImageFileIntent(String param) {
+    public Intent getImageFileIntent(File file) {
         Intent intent = new Intent("android.intent.action.VIEW");
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
-        intent.setDataAndType(uri, "image/*");
-        return intent;
-    }
-
-    public static Intent getPPTFileIntent(String param) {
-        Intent intent = new Intent("android.intent.action.VIEW");
-        intent.addCategory("android.intent.category.DEFAULT");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
-        intent.setDataAndType(uri, "application/vnd.ms-powerpoint");
-        return intent;
-    }
-
-    public static Intent getExcelFileIntent(String param) {
-
-        Intent intent = new Intent("android.intent.action.VIEW");
-        intent.addCategory("android.intent.category.DEFAULT");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
-        intent.setDataAndType(uri, "application/vnd.ms-excel");
-        return intent;
-    }
-
-    public static Intent getWordFileIntent(String param) {
-        Intent intent = new Intent("android.intent.action.VIEW");
-        intent.addCategory("android.intent.category.DEFAULT");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
-        intent.setDataAndType(uri, "application/msword");
-        return intent;
-    }
-
-    public static Intent getChmFileIntent(String param) {
-
-        Intent intent = new Intent("android.intent.action.VIEW");
-        intent.addCategory("android.intent.category.DEFAULT");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
-        intent.setDataAndType(uri, "application/x-chm");
-        return intent;
-    }
-
-    public static Intent getTextFileIntent(String param, boolean paramBoolean) {
-        Intent intent = new Intent("android.intent.action.VIEW");
-        intent.addCategory("android.intent.category.DEFAULT");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        if (paramBoolean) {
-            Uri uri1 = Uri.parse(param);
-            intent.setDataAndType(uri1, "text/plain");
-        } else {
-            Uri uri2 = Uri.fromFile(new File(param));
-            intent.setDataAndType(uri2, "text/plain");
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
         }
+        intent.setDataAndType(uri, "image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
-    public static Intent getPDFFileIntent(String param) {
+    public Intent getPPTFileIntent(File file) {
         Intent intent = new Intent("android.intent.action.VIEW");
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromFile(new File(param));
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
+        intent.setDataAndType(uri, "application/vnd.ms-powerpoint");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    public Intent getExcelFileIntent(File file) {
+
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
+        intent.setDataAndType(uri, "application/vnd.ms-excel");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    public Intent getWordFileIntent(File file) {
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
+        intent.setDataAndType(uri, "application/msword");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    public Intent getChmFileIntent(File file) {
+
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
+        intent.setDataAndType(uri, "application/x-chm");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    public Intent getTextFileIntent(File file) {
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if(Build.VERSION.SDK_INT>=24) {
+                uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider",file);
+            }else {
+                uri = Uri.fromFile(file);
+            }
+            intent.setDataAndType(uri, "text/plain");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    public Intent getPDFFileIntent(File file) {
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(Build.VERSION.SDK_INT>=24) {
+            uri = FileProvider.getUriForFile(mContext, "com.example.com.superiordownloader.fileprovider", file);
+        }else {
+            uri = Uri.fromFile(file);
+        }
         intent.setDataAndType(uri, "application/pdf");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 }

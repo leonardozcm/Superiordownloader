@@ -13,8 +13,9 @@ import android.widget.Toast;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
-import com.example.com.superiordownloader.Util.DbOperator;
+import com.example.com.superiordownloader.Util.FileOperator;
 import com.example.com.superiordownloader.Util.OpenFileUtil;
+import com.example.com.superiordownloader.Util.ThreadOperator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,19 +56,23 @@ public class DoneFileAdapter extends RecyclerView.Adapter<DoneFileAdapter.ViewHo
             public void onClick(View v) {
                 int position=viewHolder.getAdapterPosition();
                 FileInfo fileInfo=mFileInfoList.get(position);
-                Intent intent= OpenFileUtil.openFile(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+                OpenFileUtil openFileUtil=new OpenFileUtil(v.getContext());
+                Intent intent= openFileUtil.openFile(DownloadService.DownloadPath+fileInfo.getFileName());
                 v.getContext().startActivity(intent);
             }
         });
         viewHolder.done_delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                 ThreadOperator threadOperator=new ThreadOperator(v.getContext());
+                 FileOperator fileOperator=new FileOperator(v.getContext());
+
                 int position=viewHolder.getAdapterPosition();
                 FileInfo fileInfo=mFileInfoList.get(position);
-                DbOperator.deleteThread(fileInfo.getUrl());
-                DbOperator.deleteFileInfo(fileInfo.getUrl());
+                threadOperator.deleteThread(fileInfo.getUrl());
+                fileOperator.deleteFileInfo(fileInfo.getUrl());
 
-                File file = new File(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+                File file = new File(DownloadService.DownloadPath+fileInfo.getFileName());
                 if (!file.delete()) {
                     Toast.makeText(v.getContext(), "Already null", Toast.LENGTH_SHORT).show();
                 }

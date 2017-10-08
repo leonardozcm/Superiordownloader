@@ -47,7 +47,10 @@ NotificationUtil notificationUtil;
             notificationUtil.cancelNotification(fileInfo.getId());
 
 
-            Intent openfile= OpenFileUtil.openFile(DownloadService.DownloadPath+"/"+fileInfo.getFileName());
+            OpenFileUtil openFileUtil=new OpenFileUtil(context);
+            Intent openfile= openFileUtil.openFile(DownloadService.DownloadPath+fileInfo.getFileName());
+
+
             PendingIntent pi=PendingIntent.getActivity(context,0,openfile,0);
 
 

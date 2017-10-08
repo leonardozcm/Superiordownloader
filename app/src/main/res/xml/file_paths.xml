@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path path="Android/data/com.example.com.superiordownloader/" name="files_root" />
+    <external-path path="download/" name="Download" />
+</paths>

@@ -1,14 +1,12 @@
 package com.example.com.superiordownloader.Information;
 
-import org.litepal.crud.DataSupport;
-
 import java.io.Serializable;
 
 /**
  * Created by 59771 on 2017/9/30.
  */
 
-public class FileInfo extends DataSupport implements Serializable {
+public class FileInfo implements Serializable {
 
 
     private int id;

@@ -10,10 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Adapter.FileAdapter;
-
-import org.litepal.crud.DataSupport;
+import com.example.com.superiordownloader.Information.FileInfo;
+import com.example.com.superiordownloader.Util.FileOperator;
 
 import java.util.List;
 
@@ -71,7 +70,8 @@ public class DoingFragment extends Fragment {
     }
 
     private void initFiles(){
-        mFileInfoList=DataSupport.where("finished != 100").find(FileInfo.class);
+        FileOperator fileOperator=new FileOperator(view.getContext());
+        mFileInfoList=fileOperator.queryFilesNOTCompleted();
     }
 
 }

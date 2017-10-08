@@ -8,9 +8,8 @@ import android.widget.Toast;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.UpdateReceiver;
-import com.example.com.superiordownloader.Util.DbOperator;
-
-import org.litepal.crud.DataSupport;
+import com.example.com.superiordownloader.Util.FileOperator;
+import com.example.com.superiordownloader.Util.ThreadOperator;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,16 +43,20 @@ public class DownloadTask {
     public boolean mIsDelete = false;
     private List<DownloadThread> mThreadlist = null;
     public static ExecutorService mExecutorService = Executors.newCachedThreadPool();
+    private ThreadOperator threadOperator=null;
+    private FileOperator fileOperator=null;
 
     public DownloadTask(Context mContext, FileInfo mFileInfo, int mThreadCount) {
         super();
         this.mContext = mContext;
         this.mFileInfo = mFileInfo;
         this.mThreadCount = mThreadCount;
+        this.threadOperator=new ThreadOperator(mContext);
+        this.fileOperator=new FileOperator(mContext);
     }
 
     public void download(){
-        list = DataSupport.where("url = ?",mFileInfo.getUrl()).find(ThreadInfo.class);
+        list=threadOperator.queryThreads(mFileInfo.getUrl());
         /*
        如果是 第一次下载
          */
@@ -82,8 +85,8 @@ public class DownloadTask {
             /*
             防止重复下载
              */
-            if(!DbOperator.isOneExists(info)){
-                DbOperator.insertThread(info);
+            if(!threadOperator.isOneExists(info)){
+                threadOperator.insertThread(info);
             }
             //启动线程池管理线程
             DownloadTask.mExecutorService.execute(thread);
@@ -102,8 +105,8 @@ public synchronized void checkAllFinished(){
         }
     }
     if(allFinished){
-        DbOperator.updateFileInfo(mFileInfo.getUrl(),100);
-        DbOperator.deleteThread(mFileInfo.getUrl());
+        fileOperator.updateFileInfo(mFileInfo.getUrl(),100);
+        threadOperator.deleteThread(mFileInfo.getUrl());
 
         Intent stop_notify=new Intent(mContext,UpdateReceiver.class);
         stop_notify.putExtra("Action",DownloadService.ACTION_FINISHED_NOTIFY);
@@ -186,7 +189,7 @@ public synchronized void checkAllFinished(){
                                 looptimes=0;
                             }
                             intent.putExtra("speed",speed);
-                            DbOperator.updateFileInfo(mFileInfo.getUrl(),(int)finished);
+                            fileOperator.updateFileInfo(mFileInfo.getUrl(),(int)finished);
 
                             Intent update_notify=new Intent(mContext,UpdateReceiver.class);
                             update_notify.putExtra("Action",DownloadService.ACTION_UPDATE_NOTIFY);
@@ -203,7 +206,7 @@ public synchronized void checkAllFinished(){
                         }
                         if (mIsDelete){
                             Log.d("DownloadTask", "run: Delete");
-                            DbOperator.deleteThread(threadInfo.getUrl());
+                            threadOperator.deleteThread(threadInfo.getUrl());
                             if(file.isFile()){
                                 file.delete();
                                 return;
@@ -222,7 +225,7 @@ public synchronized void checkAllFinished(){
                         }
                         if(mIsPause){
                             Log.d(TAG, "run: Pause");
-                            DbOperator.updateThread(threadInfo.getUrl(), threadInfo.getId(), threadInfo.getFinished());
+                            threadOperator.updateThread(threadInfo.getUrl(), threadInfo.getId(), threadInfo.getFinished());
                             return;
                         }
                     }

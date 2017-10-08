@@ -30,14 +30,12 @@ import android.widget.Toast;
 
 import com.example.com.superiordownloader.Adapter.ViewPagerAdapter;
 import com.example.com.superiordownloader.Information.FileInfo;
-import com.example.com.superiordownloader.Information.ThreadInfo;
 import com.example.com.superiordownloader.Service.DownloadService;
-import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Util.FileCleaner;
+import com.example.com.superiordownloader.Util.FileOperator;
+import com.example.com.superiordownloader.Util.ThreadOperator;
 import com.example.com.superiordownloader.Util.UrlChecker;
 import com.example.com.superiordownloader.Util.UrlNameGeter;
-
-import org.litepal.crud.DataSupport;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -54,24 +52,28 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private String url;
     public UIRecive mRecive;
    private Intent intent;//获取浏览器Intent
+    private ThreadOperator threadOperator=new ThreadOperator(this);
+    private FileOperator fileOperator=new FileOperator(this);
    // private Binder mbinder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ClipboardManager manager=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        String clipboard_str=manager.getText().toString();
-        Log.d("Main", "onCreate: "+UrlChecker.isValidUrl(clipboard_str));
-        if(UrlChecker.isValidUrl(clipboard_str)){
-            manager.setText(null);//清空剪切板
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            LayoutInflater layoutInflater = LayoutInflater.from(this);
-            final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
-            EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
-            editText.setText(clipboard_str);
-            addTask(builder,dialogview,editText);
+
+        if(manager.hasPrimaryClip()){
+            String clipboard_str=manager.getText().toString();
+            if(UrlChecker.isValidUrl(clipboard_str)){
+                manager.setText(null);//清空剪切板
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                LayoutInflater layoutInflater = LayoutInflater.from(this);
+                final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
+                EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
+                editText.setText(clipboard_str);
+                addTask(builder,dialogview,editText);
+            }
         }
 
         intent=getIntent();
-        if(intent.getAction().equals("android.intent.action.VIEW")){
+        if(intent.getAction()!=null&&intent.getAction().equals("android.intent.action.VIEW")){
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater layoutInflater = LayoutInflater.from(this);
             final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
@@ -116,12 +118,6 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     }
 
     @Override
-    protected void onRestart(){
-        //registerClipEvents();
-        super.onRestart();
-    }
-
-    @Override
     protected void onDestroy() {
         unregisterReceiver(mRecive);
         //  stopService(new Intent(this,DownloadService.class));
@@ -153,8 +149,8 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 addTask(builder,dialogview,editText);
                 break;
             case R.id.delete:
-                DataSupport.deleteAll(ThreadInfo.class);
-                DataSupport.deleteAll(FileInfo.class);
+                fileOperator.deleteAll();
+                threadOperator.deleteAll();
                 File dir = new File(DownloadService.DownloadPath);
                 if (!FileCleaner.deleteDir(dir)) {
                     Toast.makeText(MainActivity.this, "FALSE", Toast.LENGTH_SHORT).show();
@@ -249,9 +245,10 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                     intent.setAction(DownloadService.ACTION_START);
 
                     int max = 0;
-                    max = DataSupport.max(FileInfo.class, "id", int.class);
+                   // max = DataSupport.max(FileInfo.class, "id", int.class);
+                    max=fileOperator.getMaxId();
                     FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
-                    DbOperator.insertFile(fileInfo);
+                    fileOperator.insertFile(fileInfo);
 
                     intent.putExtra("fileInfo", fileInfo);
                     startService(intent);
@@ -295,8 +292,10 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                     final View dialogview = layoutInflater.inflate(R.layout.tap_url, (ViewGroup) findViewById(R.id.tap_url));
                     final EditText editText = (EditText) dialogview.findViewById(R.id.get_url);
                     url=addedText.toString();//第一次给权限时要用
-                    editText.setText(url);
-                    addTask(builder,dialogview,editText);
+                    if(UrlChecker.isValidUrl(url)){
+                        editText.setText(url);
+                        addTask(builder,dialogview,editText);
+                    }
                 }
             }
         }
@@ -322,19 +321,20 @@ public void addTask(AlertDialog.Builder builder, View dialogview, final EditText
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
             } else {
                 try{
-                    if(DbOperator.queryThreads(url).size()!=0){
+                    if(threadOperator.queryThreads(url).size()!=0){
                         Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n Task Already Exist",Toast.LENGTH_LONG).show();
-                    }else if(DbOperator.queryFiles(url).size()!=0){
+                    }else if(fileOperator.queryFiles(url).size()!=0){
                         Toast.makeText(MainActivity.this,"\""+UrlNameGeter.get(url)+"\""+"\n File Already Exist, Please Check again.",Toast.LENGTH_LONG).show();
                     }else {
                         Intent intent = new Intent(MainActivity.this, DownloadService.class);
                         intent.setAction(DownloadService.ACTION_START);
 
                         int max = 0;
-                        max = DataSupport.max(FileInfo.class, "id", int.class);
+                       //max = DataSupport.max(FileInfo.class, "id", int.class);
+                        max=fileOperator.getMaxId();
                         FileInfo fileInfo = new FileInfo(max + 1, url, UrlNameGeter.get(url), 0, 0);
-                        Log.d("Add fileinfo", ":"+DataSupport.findAll(FileInfo.class).size());
-                        DbOperator.insertFile(fileInfo);
+                        Log.d("Add fileinfo", ":"+fileOperator.findAll().size());
+                        fileOperator.insertFile(fileInfo);
                         Log.d("Add fileinfo", ":"+fileInfo.toString());
 
                         intent.putExtra("fileInfo", fileInfo);

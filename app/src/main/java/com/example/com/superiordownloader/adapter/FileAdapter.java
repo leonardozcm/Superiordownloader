@@ -11,15 +11,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.com.superiordownloader.Util.DbOperator;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.R;
 import com.example.com.superiordownloader.Service.DownloadService;
 import com.example.com.superiordownloader.UpdateReceiver;
 import com.example.com.superiordownloader.Util.DataTransFormer;
 import com.example.com.superiordownloader.Util.FileCleaner;
-
-import org.litepal.crud.DataSupport;
+import com.example.com.superiordownloader.Util.FileOperator;
+import com.example.com.superiordownloader.Util.ThreadOperator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,9 +40,11 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
         ProgressBar download_progressbar;
         TextView download_progress;
         TextView download_speed;
+        View mView;
 
         public ViewHolder (View view){
             super(view);
+            mView=view;
             download_status=(ImageButton)view.findViewById(R.id.download_status);
             download_name=(TextView)view.findViewById(R.id.download_name);
             download_delete=(ImageButton)view.findViewById(R.id.download_delete);
@@ -59,6 +60,9 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
     @Override
     public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
+        final ThreadOperator threadOperator=new ThreadOperator(parent.getContext());
+       final FileOperator fileOperator=new FileOperator(parent.getContext());
+
          View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.download_item,parent,false);
         final ViewHolder viewHolder=new ViewHolder(view);
         viewHolder.download_status.setOnClickListener(new View.OnClickListener() {
@@ -70,22 +74,23 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 Intent intent=new Intent(v.getContext(), DownloadService.class);
                 intent.putExtra("fileInfo",fileInfo);
 
-               List<FileInfo> fileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+                FileOperator fileOperator=new FileOperator(v.getContext());
+                List<FileInfo> fileinfolist=fileOperator.queryFiles(fileInfo.getUrl());
                 int IsStop=fileinfolist.get(0).getIsStop();
-                Log.d(TAG, "onClick: "+IsStop);
+                Log.d("onCreateViewHolder", "onClick: "+IsStop);
 
                 if((IsStop%2)==0){
                     intent.setAction(DownloadService.ACTION_STOP);
 
                     v.getContext().startService(intent);
-                    DbOperator.updateFileInfo(fileInfo.getUrl());
+                    fileOperator.updateFileInfo(fileInfo.getUrl());
                     fileInfo.setSpeed(0);
                     //TODO 是否可以删除？
                     notifyDataSetChanged();
                 }else{
                     intent.setAction(DownloadService.ACTION_START);
                     v.getContext().startService(intent);
-                    DbOperator.updateFileInfo(fileInfo.getUrl());
+                    fileOperator.updateFileInfo(fileInfo.getUrl());
                     //TODO 是否可以删除？
                     notifyDataSetChanged();
                 }
@@ -109,12 +114,12 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
                 delete_notify.putExtra("fileInfo",fileInfo);
                 v.getContext().sendBroadcast(delete_notify);
 
-                File dir = new File(DownloadService.DownloadPath);
+                File dir = new File(DownloadService.DownloadPath+fileInfo.getFileName());
                 if (!FileCleaner.deleteDir(dir)) {
                     Toast.makeText(v.getContext(), "Already null", Toast.LENGTH_SHORT).show();
                 }
-                DbOperator.deleteThread(fileInfo.getUrl());
-                DbOperator.deleteFileInfo(fileInfo.getUrl());
+                threadOperator.deleteThread(fileInfo.getUrl());
+                fileOperator.deleteFileInfo(fileInfo.getUrl());
                 notifyItemRemoved(position);
                 fileInfoList.remove(position);
             }
@@ -127,10 +132,14 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         FileInfo fileInfo=fileInfoList.get(position);
         Log.d(TAG, "onBindViewHolder: POSTITION = "+position);
-        List<FileInfo> mFileinfolist= DataSupport.where("url = ?",fileInfo.getUrl()).find(FileInfo.class);
+
+        FileOperator fileOperator=new FileOperator(holder.mView.getContext());
+        List<FileInfo> mFileinfolist=fileOperator.queryFiles(fileInfo.getUrl());
         Log.d(TAG, "onBindViewHolder: "+fileInfo.getUrl());
 
+
         int IsStop=mFileinfolist.get(0).getIsStop();
+        Log.d(TAG, "onBindViewHolder: mFileinfolist.size = "+mFileinfolist.size()+", and Isstop = "+IsStop);
 
         if((IsStop%2)==0){
             holder.download_status.setImageResource(R.drawable.ic_pause);

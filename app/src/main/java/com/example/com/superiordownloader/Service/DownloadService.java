@@ -11,6 +11,7 @@ import android.util.Log;
 import com.example.com.superiordownloader.Information.FileInfo;
 import com.example.com.superiordownloader.ServiceHolder.BaseService;
 import com.example.com.superiordownloader.UpdateReceiver;
+import com.example.com.superiordownloader.Util.FileOperator;
 import com.example.com.superiordownloader.Util.NotificationUtil;
 
 import java.io.File;
@@ -172,7 +173,8 @@ public class DownloadService extends BaseService {
                 Log.d(TAG, "run: file build success");
                 //设置文件长度
                 mFileInfo.setLength(length);
-                mFileInfo.updateAll("url = ?",mFileInfo.getUrl());
+                FileOperator fileOperator=new FileOperator(DownloadService.this);
+                fileOperator.updateFileInfoLength(mFileInfo.getUrl(),mFileInfo.getLength());
                 //handler发送Fileinfo对象
                 Message msg=Message.obtain();
                 msg.obj=mFileInfo;

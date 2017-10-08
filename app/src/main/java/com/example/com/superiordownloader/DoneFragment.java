@@ -11,8 +11,7 @@ import android.view.ViewGroup;
 
 import com.example.com.superiordownloader.Adapter.DoneFileAdapter;
 import com.example.com.superiordownloader.Information.FileInfo;
-
-import org.litepal.crud.DataSupport;
+import com.example.com.superiordownloader.Util.FileOperator;
 
 import java.util.List;
 
@@ -56,7 +55,9 @@ public class DoneFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater,  @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
        view=inflater.inflate(R.layout.fragment_done, container, false);
-        mFileInfoList= DataSupport.where("finished = ?",Integer.toString(100)).find(FileInfo.class);
+
+        FileOperator fileOperator=new FileOperator(view.getContext());
+        mFileInfoList=fileOperator.queryFilesCompleted();
         RecyclerView recyclerView=(RecyclerView)view.findViewById(R.id.done_list);
         LinearLayoutManager layoutManager=new LinearLayoutManager(view.getContext());
         recyclerView.setLayoutManager(layoutManager);

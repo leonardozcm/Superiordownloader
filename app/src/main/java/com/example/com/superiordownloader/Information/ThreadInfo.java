@@ -1,17 +1,15 @@
 package com.example.com.superiordownloader.Information;
 
-import org.litepal.crud.DataSupport;
-
 /**
  * Created by 59771 on 2017/10/1.
  */
 
-public class ThreadInfo extends DataSupport{
+public class ThreadInfo{
     private int id;
     private String url;
     private int start;
     private int end;
-    private boolean isStop=false;//记录线程是否暂停
+   // private boolean isStop=false;//记录线程是否暂停
 
     private int finished;//线程当时下载位置
 public ThreadInfo(){}
@@ -62,11 +60,11 @@ public ThreadInfo(){}
     public void setFinished(int finished) {
         this.finished = finished;
     }
-    public boolean isStop() {
+   /* public boolean isStop() {
         return isStop;
     }
 
     public void setStop(boolean stop) {
         isStop = stop;
-    }
+    }*/
 }
